@@ -1398,6 +1398,12 @@ function ResumeTab() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  // store API key in localStorage so user only pastes once
+  const [userGeminiKey, setUserGeminiKey] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem("jobhunter_gemini_key") || "";
+  });
+
   const actionVerbs = [
     "led",
     "built",
@@ -1417,31 +1423,22 @@ function ResumeTab() {
     "automated",
   ];
 
-  const weakTitleIndicators = [
-    "student",
-    "aspiring",
-    "seeking",
-    "looking for",
-    "fresher",
-  ];
+  const handleSaveKey = () => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("jobhunter_gemini_key", userGeminiKey.trim());
+    }
+    setErrorMsg("");
+    alert("Saved API key locally in this browser.");
+  };
 
-  const strongTitleKeywords = [
-    "software engineer",
-    "software developer",
-    "backend engineer",
-    "frontend engineer",
-    "full stack engineer",
-    "full-stack engineer",
-    "full stack developer",
-    "data scientist",
-    "machine learning engineer",
-    "ml engineer",
-    "sde",
-    "sde i",
-    "sde 1",
-    "sde ii",
-    "sde 2",
-  ];
+  const handleDeleteKey = () => {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem("jobhunter_gemini_key");
+    }
+    setUserGeminiKey("");
+    setErrorMsg("");
+    alert("API key deleted from this browser.");
+  };
 
   const analyze = async () => {
     const text = resumeText || "";
@@ -1450,42 +1447,33 @@ function ResumeTab() {
     setLoading(true);
 
     try {
-      // --- Job title / headline sanity check ---
-      const rawLines = text.split(/\r?\n/);
-      const nonEmptyLines = rawLines.map((l) => l.trim()).filter(Boolean);
-      const headerLines = nonEmptyLines.slice(0, 8); // look only near the top
+      // --- AI job title suggestions ---
+      let jobTitleSuggestions = [];
+      let jobTitleAIMessage = "";
 
-      let detectedTitles = [];
-      let weakTitles = [];
-      let hasStrongTitle = false;
-
-      for (const line of headerLines) {
-        const lineLower = line.toLowerCase();
-        const wordCount = lineLower.split(/\s+/).length;
-
-        // Heuristic: short line, no period at the end → likely a headline
-        const mightBeTitle =
-          wordCount <= 8 && !/[.!?]$/.test(lineLower) && lineLower.length > 0;
-
-        if (!mightBeTitle) continue;
-
-        detectedTitles.push(line);
-
-        if (strongTitleKeywords.some((kw) => lineLower.includes(kw))) {
-          hasStrongTitle = true;
-        }
-
-        if (weakTitleIndicators.some((w) => lineLower.includes(w))) {
-          weakTitles.push(line);
+      if (!text.trim()) {
+        jobTitleAIMessage = "Paste your resume above to run job title checks.";
+      } else if (!userGeminiKey || !userGeminiKey.trim()) {
+        jobTitleAIMessage =
+          "Add a Gemini API key above to get AI-based suggestions for clearer job titles.";
+      } else {
+        try {
+          const suggestions = await suggestJobTitleImprovementsBrowser(
+            text,
+            userGeminiKey
+          );
+          if (!suggestions || suggestions.length === 0) {
+            jobTitleAIMessage =
+              "No obviously confusing or overly internal job titles were detected.";
+          } else {
+            jobTitleSuggestions = suggestions;
+          }
+        } catch (titleErr) {
+          console.error("Job title AI error:", titleErr);
+          jobTitleAIMessage =
+            "Job title AI check failed. Other checks still ran. Double-check your API key and quota.";
         }
       }
-
-      const jobTitleInfo = {
-        detectedTitles,
-        hasStrongTitle,
-        weakTitles,
-        hasAnyTitle: detectedTitles.length > 0,
-      };
 
       // --- Links / GitHub / portfolio ---
       const urlRegex = /https?:\/\/[^\s)]+/gi;
@@ -1524,36 +1512,61 @@ function ResumeTab() {
         }
       }
 
-      // --- Job description keyword coverage via AI ---
+      // --- Job description keyword coverage (AI, browser-only) ---
       let keywordCoverage = null;
+      let aiMessage = ""; // message specifically for keyword AI
+
       if (jobText.trim().length > 0) {
-        const keywords = await extractKeywordsFromJobDescription(jobText);
+        if (!userGeminiKey || !userGeminiKey.trim()) {
+          aiMessage =
+            "Add a Gemini API key above to see AI keyword coverage for this job description.";
+        } else {
+          try {
+            const keywords = await extractKeywordsFromJobDescriptionBrowser(
+              jobText,
+              userGeminiKey
+            );
 
-        const resumeLower = lower;
-        const matched = [];
-        const missing = [];
+            if (!keywords || keywords.length === 0) {
+              console.warn(
+                "AI keyword extraction returned no keywords. Skipping coverage section."
+              );
+              aiMessage =
+                "AI keyword extraction returned no keywords. Check your key and Gemini quota.";
+            } else {
+              const resumeLower = lower;
+              const matched = [];
+              const missing = [];
 
-        for (const kw of keywords) {
-          if (resumeLower.includes(kw.toLowerCase())) {
-            matched.push(kw);
-          } else {
-            missing.push(kw);
+              for (const kw of keywords) {
+                if (resumeLower.includes(kw.toLowerCase())) {
+                  matched.push(kw);
+                } else {
+                  missing.push(kw);
+                }
+              }
+
+              const total = keywords.length || 1;
+              const percent = Math.round((matched.length / total) * 100);
+
+              keywordCoverage = {
+                matched,
+                missing,
+                percent,
+                total,
+              };
+            }
+          } catch (aiErr) {
+            console.error("AI keyword extraction failed:", aiErr);
+            aiMessage =
+              "AI keyword extraction failed. Other checks still ran. Double-check your API key and quota.";
           }
         }
-
-        const total = keywords.length || 1;
-        const percent = Math.round((matched.length / total) * 100);
-
-        keywordCoverage = {
-          matched,
-          missing,
-          percent,
-          total,
-        };
       }
 
       setResults({
-        jobTitleInfo,
+        jobTitleSuggestions,
+        jobTitleAIMessage,
         allLinks,
         hasGithub,
         hasPortfolio,
@@ -1562,11 +1575,12 @@ function ResumeTab() {
         bulletsWithMetrics,
         bulletsNeedingStrongerVerb,
         keywordCoverage,
+        aiMessage,
       });
     } catch (err) {
       console.error(err);
       setErrorMsg(
-        "Something went wrong running the checks (maybe the AI keyword service). Try again, or remove the job description."
+        err?.message || "Something went wrong running the checks."
       );
     } finally {
       setLoading(false);
@@ -1577,9 +1591,86 @@ function ResumeTab() {
     <div>
       <h2>Resume Checker</h2>
       <p style={{ fontSize: "0.9rem", color: "#9ca3af", marginBottom: "12px" }}>
-        Paste your resume text below (you can copy from PDF/Word). Optionally
-        paste a job description to compare keywords (uses AI).
+        Paste your resume text below. Optionally paste a job description and a
+        Gemini API key to compare keywords (AI in browser).
       </p>
+
+      {/* Gemini API key input */}
+      <div
+        style={{
+          marginBottom: "16px",
+          padding: "10px 12px",
+          borderRadius: "8px",
+          background: "#020617",
+          border: "1px solid #1f2937",
+        }}
+      >
+        <label
+          style={{
+            fontSize: "0.85rem",
+            color: "#9ca3af",
+            display: "block",
+            marginBottom: "4px",
+          }}
+        >
+          Gemini API key (stored only in this browser)
+        </label>
+        <input
+          type="password"
+          value={userGeminiKey}
+          onChange={(e) => setUserGeminiKey(e.target.value)}
+          placeholder="AIzaSyD-..."
+          style={{
+            width: "100%",
+            borderRadius: "6px",
+            border: "1px solid #4b5563",
+            background: "#020617",
+            color: "#e5e7eb",
+            padding: "6px 8px",
+            fontSize: "0.85rem",
+            marginBottom: "6px",
+          }}
+        />
+        <button
+          onClick={handleSaveKey}
+          style={{
+            padding: "6px 10px",
+            borderRadius: "999px",
+            border: "1px solid #22c55e",
+            background: "#22c55e22",
+            color: "#e5e7eb",
+            fontSize: "0.85rem",
+            cursor: "pointer",
+          }}
+        >
+          Save key locally
+        </button>
+        <button
+          onClick={handleDeleteKey}
+          style={{
+            padding: "6px 10px",
+            borderRadius: "999px",
+            border: "1px solid #ef4444",
+            background: "#ef444433",
+            color: "#e5e7eb",
+            fontSize: "0.85rem",
+            cursor: "pointer",
+            marginLeft: "8px",
+          }}
+        >
+          Delete key
+        </button>
+        <p
+          style={{
+            fontSize: "0.75rem",
+            color: "#9ca3af",
+            marginTop: "4px",
+          }}
+        >
+          Your key is stored only in this browser’s localStorage and is never
+          sent to any server you control.
+        </p>
+      </div>
 
       {/* Resume input */}
       <div
@@ -1637,7 +1728,7 @@ function ResumeTab() {
             marginBottom: "4px",
           }}
         >
-          Job description (optional, used for AI keyword extraction)
+          Job description (optional, used for AI keywords)
         </label>
         <textarea
           value={jobText}
@@ -1697,78 +1788,71 @@ function ResumeTab() {
             gap: "12px",
           }}
         >
-          {/* Job title section */}
-          <div
-            style={{
-              padding: "10px 12px",
-              borderRadius: "8px",
-              background: "#020617",
-              border: "1px solid #1f2937",
-            }}
-          >
-            <h3 style={{ marginTop: 0, fontSize: "1rem" }}>
-              Job title / headline
-            </h3>
-            {results.jobTitleInfo.hasAnyTitle ? (
-              <>
-                <p
-                  style={{
-                    fontSize: "0.9rem",
-                    color: "#9ca3af",
-                    marginBottom: 6,
-                  }}
-                >
-                  Detected headline-like lines near the top:
-                </p>
-                <ul
-                  style={{
-                    margin: 0,
-                    paddingLeft: "1.2rem",
-                    fontSize: "0.85rem",
-                    color: "#e5e7eb",
-                  }}
-                >
-                  {results.jobTitleInfo.detectedTitles.map((t, i) => (
-                    <li key={i}>{t}</li>
-                  ))}
-                </ul>
-                {!results.jobTitleInfo.hasStrongTitle && (
-                  <p
-                    style={{
-                      fontSize: "0.85rem",
-                      color: "#facc15",
-                      marginTop: 6,
-                    }}
-                  >
-                    Consider using a clearer target title like &quot;Software
-                    Engineer&quot; or &quot;Backend Engineer&quot; instead of
-                    something vague or student-focused.
-                  </p>
-                )}
-                {results.jobTitleInfo.weakTitles.length > 0 && (
-                  <p
-                    style={{
-                      fontSize: "0.85rem",
-                      color: "#f97316",
-                      marginTop: 4,
-                    }}
-                  >
-                    These lines look a bit weak as a headline (e.g. contain
-                    &quot;student&quot; / &quot;aspiring&quot;):
-                    <br />
-                    {results.jobTitleInfo.weakTitles.join(" | ")}
-                  </p>
-                )}
-              </>
-            ) : (
-              <p style={{ fontSize: "0.9rem", color: "#9ca3af", margin: 0 }}>
-                I couldn&apos;t clearly detect a headline / job title near the
-                top. Many resumes start with a short line like
-                &nbsp;&quot;Software Engineer&quot; or &quot;Backend Engineer&quot;
-                above the experience section.
-              </p>
-            )}
-          </div>
+          {/* Job titles (AI suggestions) */}
+<div
+  style={{
+    padding: "10px 12px",
+    borderRadius: "8px",
+    background: "#020617",
+    border: "1px solid #1f2937",
+  }}
+>
+  <h3 style={{ marginTop: 0, fontSize: "1rem" }}>
+    Job titles (AI suggestions)
+  </h3>
+
+  {results.jobTitleSuggestions &&
+  results.jobTitleSuggestions.length > 0 ? (
+    <>
+      <p
+        style={{
+          fontSize: "0.9rem",
+          color: "#9ca3af",
+          marginBottom: 6,
+        }}
+      >
+        These titles may be overly internal or unclear. Consider using the
+        suggested version:
+      </p>
+
+      <ul
+        style={{
+          margin: 0,
+          paddingLeft: "1.2rem",
+          fontSize: "0.85rem",
+          color: "#e5e7eb",
+          display: "flex",
+          flexDirection: "column",
+          gap: "6px",
+        }}
+      >
+        {results.jobTitleSuggestions.map((t, i) => (
+          <li key={i}>
+            <div>
+              <span style={{ color: "#9ca3af" }}>Original:</span>{" "}
+              {t.original}
+            </div>
+            <div>
+              <span style={{ color: "#9ca3af" }}>Suggested:</span>{" "}
+              <strong>{t.suggested}</strong>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </>
+  ) : (
+    <p
+      style={{
+        fontSize: "0.9rem",
+        color: "#9ca3af",
+        margin: 0,
+      }}
+    >
+      {results.jobTitleAIMessage ||
+        "No obviously unclear or overly internal job titles detected."}
+    </p>
+  )}
+</div>
 
           {/* Links section */}
           <div
@@ -1785,7 +1869,9 @@ function ResumeTab() {
               {results.hasGithub ? "✅ Found" : "⚠️ Not detected"}
               <br />
               Portfolio / personal site:{" "}
-              {results.hasPortfolio ? "✅ Found" : "⚠️ Not clearly detected"}
+              {results.hasPortfolio
+                ? "✅ Found"
+                : "⚠️ Not clearly detected"}
               <br />
               Total links: {results.allLinks.length}
             </p>
@@ -1814,7 +1900,9 @@ function ResumeTab() {
               {results.bulletsWithMetricsCount} / {results.bulletCount}
             </p>
             {results.bulletsWithMetricsCount === 0 && (
-              <p style={{ fontSize: "0.85rem", color: "#facc15", margin: 0 }}>
+              <p
+                style={{ fontSize: "0.85rem", color: "#facc15", margin: 0 }}
+              >
                 Try adding numbers like &quot;increased X by 20%&quot;,
                 &quot;reduced latency by 50ms&quot;, etc.
               </p>
@@ -1834,7 +1922,9 @@ function ResumeTab() {
               Bullet action verbs
             </h3>
             {results.bulletsNeedingStrongerVerb.length === 0 ? (
-              <p style={{ fontSize: "0.9rem", color: "#9ca3af", margin: 0 }}>
+              <p
+                style={{ fontSize: "0.9rem", color: "#9ca3af", margin: 0 }}
+              >
                 ✅ All detected bullets start with a strong verb (based on the
                 current list).
               </p>
@@ -1876,7 +1966,7 @@ function ResumeTab() {
               }}
             >
               <h3 style={{ marginTop: 0, fontSize: "1rem" }}>
-                Job description keywords (AI)
+                Job description keywords (AI, in browser)
               </h3>
               <p
                 style={{
@@ -1932,37 +2022,217 @@ function ResumeTab() {
               )}
             </div>
           )}
+
+          {/* If user provided job description but AI coverage is unavailable, show a helpful message */}
+          {!results.keywordCoverage && jobText.trim().length > 0 && (
+            <div
+              style={{
+                padding: "10px 12px",
+                borderRadius: "8px",
+                background: "#020617",
+                border: "1px solid #1f2937",
+              }}
+            >
+              <h3 style={{ marginTop: 0, fontSize: "1rem" }}>
+                Job description keywords (AI)
+              </h3>
+              <p
+                style={{
+                  fontSize: "0.85rem",
+                  color: "#facc15",
+                  marginBottom: 6,
+                }}
+              >
+                {results.aiMessage ||
+                  "Add a Gemini API key above to unlock AI keyword comparison for this job description."}
+              </p>
+              {!userGeminiKey && (
+                <p
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "#9ca3af",
+                    margin: 0,
+                  }}
+                >
+                  Your resume checks (titles, links, metrics, action verbs)
+                  still ran normally. The AI keyword comparison is optional.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-/** Front-end helper: call backend AI endpoint */
-async function extractKeywordsFromJobDescription(jobText) {
-  try {
-    const res = await fetch("http://localhost:3001/api/extract-keywords", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jobText }),
-    });
-
-    if (!res.ok) {
-      console.error("Keyword API error status:", res.status);
-      throw new Error("Keyword API error");
-    }
-
-    const data = await res.json();
-
-    if (Array.isArray(data.keywords)) {
-      return data.keywords;
-    }
-
-    console.warn("Keyword API returned unexpected shape:", data);
-    return [];
-  } catch (err) {
-    console.error("Failed to call keyword API:", err);
-    // Fallback: no keywords if AI fails
+/** Browser-only Gemini call for job description keywords */
+async function extractKeywordsFromJobDescriptionBrowser(jobText, apiKey) {
+  if (!apiKey || !apiKey.trim()) {
+    console.warn("No Gemini API key set; skipping AI keyword extraction.");
     return [];
   }
+
+  const modelName = "gemini-2.5-flash-lite";
+  const url =
+    "https://generativelanguage.googleapis.com/v1beta/models/" +
+    modelName +
+    ":generateContent?key=" +
+    encodeURIComponent(apiKey.trim());
+
+  const prompt = `
+Read the following software job description and extract 10 to 30 of the most
+important SKILLS or KEYWORDS.
+
+Return ONLY valid JSON in this exact shape:
+
+{
+  "keywords": ["keyword1", "keyword2", "keyword3", ...]
+}
+
+Rules:
+- Each keyword must be short (1–3 words).
+- DO NOT group multiple keywords into one string.
+- DO NOT add any explanation text, only JSON.
+
+Job description:
+---
+${jobText}
+---
+`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+    }),
+  });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    console.error("Gemini HTTP error:", res.status, txt);
+    throw new Error("Gemini API error: HTTP " + res.status);
+  }
+
+  const data = await res.json();
+  const text =
+    data.candidates?.[0]?.content?.parts
+      ?.map((p) => p.text || "")
+      .join("\n") || "";
+
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch (e) {
+    const cleaned = text.replace(/```json|```/g, "").trim();
+    parsed = JSON.parse(cleaned);
+  }
+
+  const rawKeywords = parsed.keywords;
+  if (!rawKeywords) {
+    return [];
+  }
+
+  let keywords = [];
+  if (typeof rawKeywords === "string") {
+    keywords = rawKeywords
+      .split(/[,;\n]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  } else if (Array.isArray(rawKeywords)) {
+    keywords = rawKeywords.flatMap((item) => {
+      if (typeof item !== "string") return [];
+      return item
+        .split(/[,;\n]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+    });
+  }
+
+  const unique = Array.from(new Set(keywords));
+  return unique.slice(0, 40);
+}
+
+/** Browser-only Gemini call for job title suggestions */
+async function suggestJobTitleImprovementsBrowser(resumeText, apiKey) {
+  if (!apiKey || !apiKey.trim()) {
+    console.warn("No Gemini API key set; skipping job title AI suggestions.");
+    return [];
+  }
+
+  const modelName = "gemini-2.5-flash-lite";
+  const url =
+    "https://generativelanguage.googleapis.com/v1beta/models/" +
+    modelName +
+    ":generateContent?key=" +
+    encodeURIComponent(apiKey.trim());
+
+  const prompt = `
+Extract job titles from the resume text below.
+
+Identify any titles that:
+- are overly internal (e.g., "DOE-SULI Intern", "Research Aide II")
+- are unclear to a typical tech recruiter
+- do not use standard industry phrasing
+
+For each unclear title, suggest a clearer, more standard job title.
+
+Return ONLY valid JSON in this exact format:
+
+{
+  "titles": [
+    {
+      "original": "Original title exactly as written",
+      "suggested": "Clearer, more standard title"
+    }
+  ]
+}
+
+If all titles are fine, return:
+
+{ "titles": [] }
+
+Resume:
+---
+${resumeText}
+---
+`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+    }),
+  });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    console.error("Gemini job title API error:", res.status, txt);
+    throw new Error("Gemini job title API error: HTTP " + res.status);
+  }
+
+  const data = await res.json();
+  const text =
+    data.candidates?.[0]?.content?.parts
+      ?.map((p) => p.text || "")
+      .join("\n") || "";
+
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    const cleaned = text.replace(/```json|```/g, "").trim();
+    parsed = JSON.parse(cleaned);
+  }
+
+  if (!parsed.titles || !Array.isArray(parsed.titles)) return [];
+
+  return parsed.titles
+    .map((t) => ({
+      original: String(t.original || "").trim(),
+      suggested: String(t.suggested || "").trim(),
+    }))
+    .filter((t) => t.original && t.suggested);
 }
