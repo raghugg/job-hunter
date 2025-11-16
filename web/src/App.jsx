@@ -1217,81 +1217,71 @@ function ResumeTab() {
             gap: "12px",
           }}
         >
-          {/* Job title section (AI suggestions) */}
-          <div
-            style={{
-              padding: "10px 12px",
-              borderRadius: "8px",
-              background: "#020617",
-              border: "1px solid #1f2937",
-            }}
-          >
-            <h3 style={{ marginTop: 0, fontSize: "1rem" }}>
-              Job titles (AI suggestions)
-            </h3>
+          {/* Job titles (AI suggestions) */}
+<div
+  style={{
+    padding: "10px 12px",
+    borderRadius: "8px",
+    background: "#020617",
+    border: "1px solid #1f2937",
+  }}
+>
+  <h3 style={{ marginTop: 0, fontSize: "1rem" }}>
+    Job titles (AI suggestions)
+  </h3>
 
-            {results.jobTitleSuggestions &&
-            results.jobTitleSuggestions.length > 0 ? (
-              <>
-                <p
-                  style={{
-                    fontSize: "0.9rem",
-                    color: "#9ca3af",
-                    marginBottom: 6,
-                  }}
-                >
-                  These titles might be confusing or overly internal. Consider
-                  using the suggested version on your resume:
-                </p>
-                <ul
-                  style={{
-                    margin: 0,
-                    paddingLeft: "1.2rem",
-                    fontSize: "0.85rem",
-                    color: "#e5e7eb",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "6px",
-                  }}
-                >
-                  {results.jobTitleSuggestions.map((t, i) => (
-                    <li key={i}>
-                      <div>
-                        <span style={{ color: "#9ca3af" }}>Original:</span>{" "}
-                        {t.original}
-                      </div>
-                      <div>
-                        <span style={{ color: "#9ca3af" }}>Suggested:</span>{" "}
-                        <strong>{t.suggested}</strong>
-                      </div>
-                      {t.reason && (
-                        <div
-                          style={{
-                            fontSize: "0.8rem",
-                            color: "#9ca3af",
-                            marginTop: 2,
-                          }}
-                        >
-                          {t.reason}
-                        </div>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </>
-            ) : (
-              <p
-                style={{
-                  fontSize: "0.9rem",
-                  color: "#9ca3af",
-                  margin: 0,
-                }}
-              >
-                {results.jobTitleAIMessage ||
-                  "No obviously confusing or overly internal job titles were detected."}
-              </p>
-            )}
-          </div>
+  {results.jobTitleSuggestions &&
+  results.jobTitleSuggestions.length > 0 ? (
+    <>
+      <p
+        style={{
+          fontSize: "0.9rem",
+          color: "#9ca3af",
+          marginBottom: 6,
+        }}
+      >
+        These titles may be overly internal or unclear. Consider using the
+        suggested version:
+      </p>
+
+      <ul
+        style={{
+          margin: 0,
+          paddingLeft: "1.2rem",
+          fontSize: "0.85rem",
+          color: "#e5e7eb",
+          display: "flex",
+          flexDirection: "column",
+          gap: "6px",
+        }}
+      >
+        {results.jobTitleSuggestions.map((t, i) => (
+          <li key={i}>
+            <div>
+              <span style={{ color: "#9ca3af" }}>Original:</span>{" "}
+              {t.original}
+            </div>
+            <div>
+              <span style={{ color: "#9ca3af" }}>Suggested:</span>{" "}
+              <strong>{t.suggested}</strong>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </>
+  ) : (
+    <p
+      style={{
+        fontSize: "0.9rem",
+        color: "#9ca3af",
+        margin: 0,
+      }}
+    >
+      {results.jobTitleAIMessage ||
+        "No obviously unclear or overly internal job titles detected."}
+    </p>
+  )}
+</div>
 
           {/* Links section */}
           <div
@@ -1608,38 +1598,31 @@ async function suggestJobTitleImprovementsBrowser(resumeText, apiKey) {
     encodeURIComponent(apiKey.trim());
 
   const prompt = `
-You are helping someone make their resume more understandable to typical tech recruiters.
+Extract job titles from the resume text below.
 
-Given the full resume text below, identify job titles used in the resume (including any top-of-resume headline AND the role titles in each experience section).
+Identify any titles that:
+- are overly internal (e.g., "DOE-SULI Intern", "Research Aide II")
+- are unclear to a typical tech recruiter
+- do not use standard industry phrasing
 
-For each job title that is:
-- overly internal (e.g. "DOE-SULI Intern", "Research Aide II"), OR
-- unclear to a typical software / tech recruiter, OR
-- missing a standard "Software Engineer / Intern / Developer / Data Scientist / etc." phrase,
+For each unclear title, suggest a clearer, more standard job title.
 
-suggest a clearer, more standard job title that could be used on the resume instead.
-
-If a job title is already clear and standard (like "Software Engineering Intern", "Software Engineer", "Backend Engineer"), you may omit it from the list.
-
-Return ONLY valid JSON of this shape:
+Return ONLY valid JSON in this exact format:
 
 {
   "titles": [
     {
-      "original": "original job title exactly as written",
-      "suggested": "clearer, more standard title that still reflects the role",
-      "reason": "short explanation (one sentence) for why this is a better title"
+      "original": "Original title exactly as written",
+      "suggested": "Clearer, more standard title"
     }
   ]
 }
 
-If there are no titles that you think need improvement, use:
+If all titles are fine, return:
 
-{
-  "titles": []
-}
+{ "titles": [] }
 
-Resume text:
+Resume:
 ---
 ${resumeText}
 ---
@@ -1655,7 +1638,7 @@ ${resumeText}
 
   if (!res.ok) {
     const txt = await res.text();
-    console.error("Gemini HTTP error (job titles):", res.status, txt);
+    console.error("Gemini job title API error:", res.status, txt);
     throw new Error("Gemini job title API error: HTTP " + res.status);
   }
 
@@ -1668,22 +1651,17 @@ ${resumeText}
   let parsed;
   try {
     parsed = JSON.parse(text);
-  } catch (e) {
+  } catch {
     const cleaned = text.replace(/```json|```/g, "").trim();
     parsed = JSON.parse(cleaned);
   }
 
-  if (!parsed.titles || !Array.isArray(parsed.titles)) {
-    return [];
-  }
+  if (!parsed.titles || !Array.isArray(parsed.titles)) return [];
 
-  const suggestions = parsed.titles
+  return parsed.titles
     .map((t) => ({
       original: String(t.original || "").trim(),
       suggested: String(t.suggested || "").trim(),
-      reason: String(t.reason || "").trim(),
     }))
     .filter((t) => t.original && t.suggested);
-
-  return suggestions;
 }
