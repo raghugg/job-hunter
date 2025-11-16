@@ -615,22 +615,211 @@ function ApplyTab() {
 
 /** ---------- LEETCODE TAB ---------- **/
 
+const LEETCODE_PROBLEMS = [
+  // Easy Problems
+  { id: 1, title: "Two Sum", difficulty: "Easy", acceptance: 49.5, url: "https://leetcode.com/problems/two-sum/" },
+  { id: 20, title: "Valid Parentheses", difficulty: "Easy", acceptance: 40.8, url: "https://leetcode.com/problems/valid-parentheses/" },
+  { id: 21, title: "Merge Two Sorted Lists", difficulty: "Easy", acceptance: 62.1, url: "https://leetcode.com/problems/merge-two-sorted-lists/" },
+  { id: 26, title: "Remove Duplicates from Sorted Array", difficulty: "Easy", acceptance: 52.3, url: "https://leetcode.com/problems/remove-duplicates-from-sorted-array/" },
+  { id: 27, title: "Remove Element", difficulty: "Easy", acceptance: 53.2, url: "https://leetcode.com/problems/remove-element/" },
+  { id: 53, title: "Maximum Subarray", difficulty: "Easy", acceptance: 50.1, url: "https://leetcode.com/problems/maximum-subarray/" },
+  { id: 66, title: "Plus One", difficulty: "Easy", acceptance: 44.3, url: "https://leetcode.com/problems/plus-one/" },
+  { id: 70, title: "Climbing Stairs", difficulty: "Easy", acceptance: 51.7, url: "https://leetcode.com/problems/climbing-stairs/" },
+  { id: 88, title: "Merge Sorted Array", difficulty: "Easy", acceptance: 46.8, url: "https://leetcode.com/problems/merge-sorted-array/" },
+  { id: 94, title: "Binary Tree Inorder Traversal", difficulty: "Easy", acceptance: 74.2, url: "https://leetcode.com/problems/binary-tree-inorder-traversal/" },
+  { id: 101, title: "Symmetric Tree", difficulty: "Easy", acceptance: 54.3, url: "https://leetcode.com/problems/symmetric-tree/" },
+  { id: 104, title: "Maximum Depth of Binary Tree", difficulty: "Easy", acceptance: 73.8, url: "https://leetcode.com/problems/maximum-depth-of-binary-tree/" },
+  { id: 121, title: "Best Time to Buy and Sell Stock", difficulty: "Easy", acceptance: 54.2, url: "https://leetcode.com/problems/best-time-to-buy-and-sell-stock/" },
+  { id: 125, title: "Valid Palindrome", difficulty: "Easy", acceptance: 44.7, url: "https://leetcode.com/problems/valid-palindrome/" },
+  { id: 136, title: "Single Number", difficulty: "Easy", acceptance: 70.1, url: "https://leetcode.com/problems/single-number/" },
+  { id: 141, title: "Linked List Cycle", difficulty: "Easy", acceptance: 48.3, url: "https://leetcode.com/problems/linked-list-cycle/" },
+  { id: 155, title: "Min Stack", difficulty: "Easy", acceptance: 52.1, url: "https://leetcode.com/problems/min-stack/" },
+  { id: 169, title: "Majority Element", difficulty: "Easy", acceptance: 63.8, url: "https://leetcode.com/problems/majority-element/" },
+  { id: 206, title: "Reverse Linked List", difficulty: "Easy", acceptance: 73.5, url: "https://leetcode.com/problems/reverse-linked-list/" },
+  { id: 217, title: "Contains Duplicate", difficulty: "Easy", acceptance: 61.2, url: "https://leetcode.com/problems/contains-duplicate/" },
+  { id: 226, title: "Invert Binary Tree", difficulty: "Easy", acceptance: 74.5, url: "https://leetcode.com/problems/invert-binary-tree/" },
+  { id: 234, title: "Palindrome Linked List", difficulty: "Easy", acceptance: 51.9, url: "https://leetcode.com/problems/palindrome-linked-list/" },
+  { id: 242, title: "Valid Anagram", difficulty: "Easy", acceptance: 63.5, url: "https://leetcode.com/problems/valid-anagram/" },
+  { id: 268, title: "Missing Number", difficulty: "Easy", acceptance: 62.1, url: "https://leetcode.com/problems/missing-number/" },
+  { id: 283, title: "Move Zeroes", difficulty: "Easy", acceptance: 61.3, url: "https://leetcode.com/problems/move-zeroes/" },
+  { id: 344, title: "Reverse String", difficulty: "Easy", acceptance: 78.1, url: "https://leetcode.com/problems/reverse-string/" },
+  { id: 387, title: "First Unique Character in a String", difficulty: "Easy", acceptance: 59.8, url: "https://leetcode.com/problems/first-unique-character-in-a-string/" },
+  { id: 392, title: "Is Subsequence", difficulty: "Easy", acceptance: 54.2, url: "https://leetcode.com/problems/is-subsequence/" },
+  { id: 404, title: "Sum of Left Leaves", difficulty: "Easy", acceptance: 57.3, url: "https://leetcode.com/problems/sum-of-left-leaves/" },
+  { id: 543, title: "Diameter of Binary Tree", difficulty: "Easy", acceptance: 58.1, url: "https://leetcode.com/problems/diameter-of-binary-tree/" },
+
+  // Medium Problems
+  { id: 2, title: "Add Two Numbers", difficulty: "Medium", acceptance: 41.2, url: "https://leetcode.com/problems/add-two-numbers/" },
+  { id: 3, title: "Longest Substring Without Repeating Characters", difficulty: "Medium", acceptance: 34.1, url: "https://leetcode.com/problems/longest-substring-without-repeating-characters/" },
+  { id: 5, title: "Longest Palindromic Substring", difficulty: "Medium", acceptance: 33.2, url: "https://leetcode.com/problems/longest-palindromic-substring/" },
+  { id: 11, title: "Container With Most Water", difficulty: "Medium", acceptance: 54.3, url: "https://leetcode.com/problems/container-with-most-water/" },
+  { id: 15, title: "3Sum", difficulty: "Medium", acceptance: 33.8, url: "https://leetcode.com/problems/3sum/" },
+  { id: 17, title: "Letter Combinations of a Phone Number", difficulty: "Medium", acceptance: 57.8, url: "https://leetcode.com/problems/letter-combinations-of-a-phone-number/" },
+  { id: 19, title: "Remove Nth Node From End of List", difficulty: "Medium", acceptance: 43.1, url: "https://leetcode.com/problems/remove-nth-node-from-end-of-list/" },
+  { id: 22, title: "Generate Parentheses", difficulty: "Medium", acceptance: 73.8, url: "https://leetcode.com/problems/generate-parentheses/" },
+  { id: 33, title: "Search in Rotated Sorted Array", difficulty: "Medium", acceptance: 39.4, url: "https://leetcode.com/problems/search-in-rotated-sorted-array/" },
+  { id: 39, title: "Combination Sum", difficulty: "Medium", acceptance: 70.1, url: "https://leetcode.com/problems/combination-sum/" },
+  { id: 46, title: "Permutations", difficulty: "Medium", acceptance: 77.2, url: "https://leetcode.com/problems/permutations/" },
+  { id: 48, title: "Rotate Image", difficulty: "Medium", acceptance: 72.1, url: "https://leetcode.com/problems/rotate-image/" },
+  { id: 49, title: "Group Anagrams", difficulty: "Medium", acceptance: 67.3, url: "https://leetcode.com/problems/group-anagrams/" },
+  { id: 56, title: "Merge Intervals", difficulty: "Medium", acceptance: 46.8, url: "https://leetcode.com/problems/merge-intervals/" },
+  { id: 62, title: "Unique Paths", difficulty: "Medium", acceptance: 63.2, url: "https://leetcode.com/problems/unique-paths/" },
+  { id: 75, title: "Sort Colors", difficulty: "Medium", acceptance: 60.1, url: "https://leetcode.com/problems/sort-colors/" },
+  { id: 78, title: "Subsets", difficulty: "Medium", acceptance: 76.5, url: "https://leetcode.com/problems/subsets/" },
+  { id: 79, title: "Word Search", difficulty: "Medium", acceptance: 40.3, url: "https://leetcode.com/problems/word-search/" },
+  { id: 98, title: "Validate Binary Search Tree", difficulty: "Medium", acceptance: 32.1, url: "https://leetcode.com/problems/validate-binary-search-tree/" },
+  { id: 102, title: "Binary Tree Level Order Traversal", difficulty: "Medium", acceptance: 65.3, url: "https://leetcode.com/problems/binary-tree-level-order-traversal/" },
+  { id: 105, title: "Construct Binary Tree from Preorder and Inorder Traversal", difficulty: "Medium", acceptance: 62.5, url: "https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/" },
+  { id: 128, title: "Longest Consecutive Sequence", difficulty: "Medium", acceptance: 48.1, url: "https://leetcode.com/problems/longest-consecutive-sequence/" },
+  { id: 139, title: "Word Break", difficulty: "Medium", acceptance: 46.2, url: "https://leetcode.com/problems/word-break/" },
+  { id: 146, title: "LRU Cache", difficulty: "Medium", acceptance: 42.1, url: "https://leetcode.com/problems/lru-cache/" },
+  { id: 200, title: "Number of Islands", difficulty: "Medium", acceptance: 57.8, url: "https://leetcode.com/problems/number-of-islands/" },
+  { id: 207, title: "Course Schedule", difficulty: "Medium", acceptance: 46.3, url: "https://leetcode.com/problems/course-schedule/" },
+  { id: 208, title: "Implement Trie (Prefix Tree)", difficulty: "Medium", acceptance: 64.2, url: "https://leetcode.com/problems/implement-trie-prefix-tree/" },
+  { id: 215, title: "Kth Largest Element in an Array", difficulty: "Medium", acceptance: 66.8, url: "https://leetcode.com/problems/kth-largest-element-in-an-array/" },
+  { id: 230, title: "Kth Smallest Element in a BST", difficulty: "Medium", acceptance: 71.5, url: "https://leetcode.com/problems/kth-smallest-element-in-a-bst/" },
+  { id: 236, title: "Lowest Common Ancestor of a Binary Tree", difficulty: "Medium", acceptance: 61.3, url: "https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree/" },
+  { id: 238, title: "Product of Array Except Self", difficulty: "Medium", acceptance: 65.1, url: "https://leetcode.com/problems/product-of-array-except-self/" },
+  { id: 287, title: "Find the Duplicate Number", difficulty: "Medium", acceptance: 59.3, url: "https://leetcode.com/problems/find-the-duplicate-number/" },
+  { id: 300, title: "Longest Increasing Subsequence", difficulty: "Medium", acceptance: 53.2, url: "https://leetcode.com/problems/longest-increasing-subsequence/" },
+  { id: 322, title: "Coin Change", difficulty: "Medium", acceptance: 43.1, url: "https://leetcode.com/problems/coin-change/" },
+  { id: 347, title: "Top K Frequent Elements", difficulty: "Medium", acceptance: 64.3, url: "https://leetcode.com/problems/top-k-frequent-elements/" },
+  { id: 416, title: "Partition Equal Subset Sum", difficulty: "Medium", acceptance: 47.2, url: "https://leetcode.com/problems/partition-equal-subset-sum/" },
+  { id: 424, title: "Longest Repeating Character Replacement", difficulty: "Medium", acceptance: 52.1, url: "https://leetcode.com/problems/longest-repeating-character-replacement/" },
+  { id: 435, title: "Non-overlapping Intervals", difficulty: "Medium", acceptance: 51.8, url: "https://leetcode.com/problems/non-overlapping-intervals/" },
+  { id: 438, title: "Find All Anagrams in a String", difficulty: "Medium", acceptance: 49.8, url: "https://leetcode.com/problems/find-all-anagrams-in-a-string/" },
+  { id: 621, title: "Task Scheduler", difficulty: "Medium", acceptance: 57.3, url: "https://leetcode.com/problems/task-scheduler/" },
+
+  // Hard Problems
+  { id: 4, title: "Median of Two Sorted Arrays", difficulty: "Hard", acceptance: 37.8, url: "https://leetcode.com/problems/median-of-two-sorted-arrays/" },
+  { id: 10, title: "Regular Expression Matching", difficulty: "Hard", acceptance: 28.1, url: "https://leetcode.com/problems/regular-expression-matching/" },
+  { id: 23, title: "Merge k Sorted Lists", difficulty: "Hard", acceptance: 51.2, url: "https://leetcode.com/problems/merge-k-sorted-lists/" },
+  { id: 25, title: "Reverse Nodes in k-Group", difficulty: "Hard", acceptance: 56.8, url: "https://leetcode.com/problems/reverse-nodes-in-k-group/" },
+  { id: 32, title: "Longest Valid Parentheses", difficulty: "Hard", acceptance: 33.1, url: "https://leetcode.com/problems/longest-valid-parentheses/" },
+  { id: 37, title: "Sudoku Solver", difficulty: "Hard", acceptance: 58.3, url: "https://leetcode.com/problems/sudoku-solver/" },
+  { id: 41, title: "First Missing Positive", difficulty: "Hard", acceptance: 37.2, url: "https://leetcode.com/problems/first-missing-positive/" },
+  { id: 42, title: "Trapping Rain Water", difficulty: "Hard", acceptance: 60.1, url: "https://leetcode.com/problems/trapping-rain-water/" },
+  { id: 44, title: "Wildcard Matching", difficulty: "Hard", acceptance: 27.8, url: "https://leetcode.com/problems/wildcard-matching/" },
+  { id: 51, title: "N-Queens", difficulty: "Hard", acceptance: 66.3, url: "https://leetcode.com/problems/n-queens/" },
+  { id: 72, title: "Edit Distance", difficulty: "Hard", acceptance: 54.2, url: "https://leetcode.com/problems/edit-distance/" },
+  { id: 76, title: "Minimum Window Substring", difficulty: "Hard", acceptance: 41.1, url: "https://leetcode.com/problems/minimum-window-substring/" },
+  { id: 84, title: "Largest Rectangle in Histogram", difficulty: "Hard", acceptance: 43.8, url: "https://leetcode.com/problems/largest-rectangle-in-histogram/" },
+  { id: 85, title: "Maximal Rectangle", difficulty: "Hard", acceptance: 45.3, url: "https://leetcode.com/problems/maximal-rectangle/" },
+  { id: 124, title: "Binary Tree Maximum Path Sum", difficulty: "Hard", acceptance: 39.2, url: "https://leetcode.com/problems/binary-tree-maximum-path-sum/" },
+  { id: 127, title: "Word Ladder", difficulty: "Hard", acceptance: 37.1, url: "https://leetcode.com/problems/word-ladder/" },
+  { id: 212, title: "Word Search II", difficulty: "Hard", acceptance: 37.8, url: "https://leetcode.com/problems/word-search-ii/" },
+  { id: 239, title: "Sliding Window Maximum", difficulty: "Hard", acceptance: 46.3, url: "https://leetcode.com/problems/sliding-window-maximum/" },
+  { id: 295, title: "Find Median from Data Stream", difficulty: "Hard", acceptance: 51.2, url: "https://leetcode.com/problems/find-median-from-data-stream/" },
+  { id: 297, title: "Serialize and Deserialize Binary Tree", difficulty: "Hard", acceptance: 56.1, url: "https://leetcode.com/problems/serialize-and-deserialize-binary-tree/" },
+];
+
 function LeetCodeTab() {
+  const [randomProblems, setRandomProblems] = useState([]);
+
+  const getRandomProblems = () => {
+    const shuffled = [...LEETCODE_PROBLEMS].sort(() => Math.random() - 0.5);
+    setRandomProblems(shuffled.slice(0, 3));
+  };
+
+  const difficultyColor = (difficulty) => {
+    switch (difficulty) {
+      case "Easy":
+        return "#4ade80";
+      case "Medium":
+        return "#facc15";
+      case "Hard":
+        return "#f87171";
+      default:
+        return "#9ca3af";
+    }
+  };
+
   return (
     <div>
       <h2>LeetCode / Interview Practice</h2>
-      <p style={{ fontSize: "0.9rem", color: "#9ca3af", marginBottom: "8px" }}>
-        This tab can become your hub for tracking which problems you&apos;ve
-        done, difficulty balance, and topics to focus on.
+      <p style={{ fontSize: "0.9rem", color: "#9ca3af", marginBottom: "16px" }}>
+        Get 3 random LeetCode problems to practice. Click the button to generate
+        a new set of challenges!
       </p>
-      <p style={{ fontSize: "0.9rem", color: "#9ca3af" }}>
-        Right now it&apos;s tied conceptually to the &quot;Solve 1 LeetCode /
-        interview problem&quot; task.
-      </p>
+
+      <button
+        onClick={getRandomProblems}
+        style={{
+          padding: "10px 20px",
+          borderRadius: "8px",
+          border: "1px solid #22c55e",
+          background: "#22c55e22",
+          color: "#e5e7eb",
+          fontSize: "0.9rem",
+          cursor: "pointer",
+          marginBottom: "20px",
+        }}
+      >
+        🎲 Get 3 Random Problems
+      </button>
+
+      {randomProblems.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {randomProblems.map((problem) => (
+            <a
+              key={problem.id}
+              href={problem.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                padding: "16px",
+                borderRadius: "8px",
+                background: "#020617",
+                border: "1px solid #1f2937",
+                textDecoration: "none",
+                color: "#e5e7eb",
+                display: "block",
+                transition: "border-color 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "#22c55e";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "#1f2937";
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "12px",
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "1rem", marginBottom: "4px" }}>
+                    {problem.title}
+                  </div>
+                  <div style={{ fontSize: "0.8rem", color: "#9ca3af" }}>
+                    Problem #{problem.id}
+                  </div>
+                </div>
+                <div
+                  style={{
+                    padding: "4px 12px",
+                    borderRadius: "999px",
+                    fontSize: "0.8rem",
+                    fontWeight: "500",
+                    background: `${difficultyColor(problem.difficulty)}22`,
+                    color: difficultyColor(problem.difficulty),
+                    border: `1px solid ${difficultyColor(problem.difficulty)}`,
+                  }}
+                >
+                  {problem.difficulty}
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
-
 /** ---------- LINKEDIN TAB ---------- **/
 
 function LinkedInTab() {
