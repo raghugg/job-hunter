@@ -815,16 +815,580 @@ function LinkedInTab() {
   );
 }
 
-/** ---------- RESUME TAB (still placeholder) ---------- **/
+/** ---------- RESUME TAB (AI keywords + job title sanity) ---------- **/
 
 function ResumeTab() {
+  const [resumeText, setResumeText] = useState("");
+  const [jobText, setJobText] = useState("");
+  const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const actionVerbs = [
+    "led",
+    "built",
+    "created",
+    "implemented",
+    "designed",
+    "developed",
+    "improved",
+    "optimized",
+    "managed",
+    "organized",
+    "increased",
+    "reduced",
+    "launched",
+    "owned",
+    "collaborated",
+    "automated",
+  ];
+
+  const weakTitleIndicators = [
+    "student",
+    "aspiring",
+    "seeking",
+    "looking for",
+    "fresher",
+  ];
+
+  const strongTitleKeywords = [
+    "software engineer",
+    "software developer",
+    "backend engineer",
+    "frontend engineer",
+    "full stack engineer",
+    "full-stack engineer",
+    "full stack developer",
+    "data scientist",
+    "machine learning engineer",
+    "ml engineer",
+    "sde",
+    "sde i",
+    "sde 1",
+    "sde ii",
+    "sde 2",
+  ];
+
+  const analyze = async () => {
+    const text = resumeText || "";
+    const lower = text.toLowerCase();
+    setErrorMsg("");
+    setLoading(true);
+
+    try {
+      // --- Job title / headline sanity check ---
+      const rawLines = text.split(/\r?\n/);
+      const nonEmptyLines = rawLines.map((l) => l.trim()).filter(Boolean);
+      const headerLines = nonEmptyLines.slice(0, 8); // look only near the top
+
+      let detectedTitles = [];
+      let weakTitles = [];
+      let hasStrongTitle = false;
+
+      for (const line of headerLines) {
+        const lineLower = line.toLowerCase();
+        const wordCount = lineLower.split(/\s+/).length;
+
+        // Heuristic: short line, no period at the end → likely a headline
+        const mightBeTitle =
+          wordCount <= 8 && !/[.!?]$/.test(lineLower) && lineLower.length > 0;
+
+        if (!mightBeTitle) continue;
+
+        detectedTitles.push(line);
+
+        if (strongTitleKeywords.some((kw) => lineLower.includes(kw))) {
+          hasStrongTitle = true;
+        }
+
+        if (weakTitleIndicators.some((w) => lineLower.includes(w))) {
+          weakTitles.push(line);
+        }
+      }
+
+      const jobTitleInfo = {
+        detectedTitles,
+        hasStrongTitle,
+        weakTitles,
+        hasAnyTitle: detectedTitles.length > 0,
+      };
+
+      // --- Links / GitHub / portfolio ---
+      const urlRegex = /https?:\/\/[^\s)]+/gi;
+      const allLinks = text.match(urlRegex) || [];
+      const hasGithub = /github\.com/i.test(text);
+      const hasPortfolio = allLinks.some(
+        (link) =>
+          !/github\.com/i.test(link) &&
+          !/linkedin\.com/i.test(link) &&
+          !/leetcode\.com/i.test(link)
+      );
+
+      // --- Bullets & metrics ---
+      const lines = text.split(/\r?\n/);
+      const bulletLines = lines.filter((line) =>
+        /^[\s]*[-*•]/.test(line)
+      );
+
+      const bulletsWithMetrics = bulletLines.filter((line) =>
+        /(\d|\bpercent\b|%|increase|decrease|improved|reduced|saved|grew|boosted)/i.test(
+          line
+        )
+      );
+
+      // --- Action verb at start of bullet ---
+      const bulletsNeedingStrongerVerb = [];
+      for (const line of bulletLines) {
+        const withoutBullet = line.replace(/^[\s]*[-*•]\s*/, "");
+        const firstWordMatch = withoutBullet.match(/^([A-Za-z']+)/);
+        if (!firstWordMatch) continue;
+
+        const firstWord = firstWordMatch[1].toLowerCase();
+        const isActionVerb = actionVerbs.includes(firstWord);
+        if (!isActionVerb) {
+          bulletsNeedingStrongerVerb.push(line.trim());
+        }
+      }
+
+      // --- Job description keyword coverage via AI ---
+      let keywordCoverage = null;
+      if (jobText.trim().length > 0) {
+        const keywords = await extractKeywordsFromJobDescription(jobText);
+
+        const resumeLower = lower;
+        const matched = [];
+        const missing = [];
+
+        for (const kw of keywords) {
+          if (resumeLower.includes(kw.toLowerCase())) {
+            matched.push(kw);
+          } else {
+            missing.push(kw);
+          }
+        }
+
+        const total = keywords.length || 1;
+        const percent = Math.round((matched.length / total) * 100);
+
+        keywordCoverage = {
+          matched,
+          missing,
+          percent,
+          total,
+        };
+      }
+
+      setResults({
+        jobTitleInfo,
+        allLinks,
+        hasGithub,
+        hasPortfolio,
+        bulletCount: bulletLines.length,
+        bulletsWithMetricsCount: bulletsWithMetrics.length,
+        bulletsWithMetrics,
+        bulletsNeedingStrongerVerb,
+        keywordCoverage,
+      });
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(
+        "Something went wrong running the checks (maybe the AI keyword service). Try again, or remove the job description."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div>
-      <h2>Resume Checker (coming soon)</h2>
-      <p style={{ fontSize: "0.9rem", color: "#9ca3af" }}>
-        You’ll be able to upload a resume here and get feedback on links, action
-        verbs, metrics, whitespace, and job-description keyword matches.
+      <h2>Resume Checker</h2>
+      <p style={{ fontSize: "0.9rem", color: "#9ca3af", marginBottom: "12px" }}>
+        Paste your resume text below (you can copy from PDF/Word). Optionally
+        paste a job description to compare keywords (uses AI).
       </p>
+
+      {/* Resume input */}
+      <div
+        style={{
+          marginBottom: "16px",
+          padding: "10px 12px",
+          borderRadius: "8px",
+          background: "#020617",
+          border: "1px solid #1f2937",
+        }}
+      >
+        <label
+          style={{
+            fontSize: "0.85rem",
+            color: "#9ca3af",
+            display: "block",
+            marginBottom: "4px",
+          }}
+        >
+          Resume text
+        </label>
+        <textarea
+          value={resumeText}
+          onChange={(e) => setResumeText(e.target.value)}
+          rows={10}
+          placeholder="Paste your resume content here..."
+          style={{
+            width: "100%",
+            borderRadius: "6px",
+            border: "1px solid #4b5563",
+            background: "#020617",
+            color: "#e5e7eb",
+            padding: "8px",
+            fontFamily: "monospace",
+            fontSize: "0.85rem",
+          }}
+        />
+      </div>
+
+      {/* Job description input */}
+      <div
+        style={{
+          marginBottom: "16px",
+          padding: "10px 12px",
+          borderRadius: "8px",
+          background: "#020617",
+          border: "1px solid #1f2937",
+        }}
+      >
+        <label
+          style={{
+            fontSize: "0.85rem",
+            color: "#9ca3af",
+            display: "block",
+            marginBottom: "4px",
+          }}
+        >
+          Job description (optional, used for AI keyword extraction)
+        </label>
+        <textarea
+          value={jobText}
+          onChange={(e) => setJobText(e.target.value)}
+          rows={6}
+          placeholder="Paste a job description here..."
+          style={{
+            width: "100%",
+            borderRadius: "6px",
+            border: "1px solid #4b5563",
+            background: "#020617",
+            color: "#e5e7eb",
+            padding: "8px",
+            fontFamily: "monospace",
+            fontSize: "0.85rem",
+          }}
+        />
+      </div>
+
+      {errorMsg && (
+        <p
+          style={{
+            fontSize: "0.85rem",
+            color: "#f97316",
+            marginTop: 0,
+            marginBottom: "8px",
+          }}
+        >
+          {errorMsg}
+        </p>
+      )}
+
+      <button
+        onClick={analyze}
+        disabled={!resumeText.trim() || loading}
+        style={{
+          padding: "8px 14px",
+          borderRadius: "999px",
+          border: "1px solid #22c55e",
+          background:
+            !resumeText.trim() || loading ? "#111827" : "#22c55e22",
+          color: "#e5e7eb",
+          fontSize: "0.9rem",
+          cursor:
+            !resumeText.trim() || loading ? "not-allowed" : "pointer",
+          marginBottom: "16px",
+        }}
+      >
+        {loading ? "Running checks..." : "Run checks"}
+      </button>
+
+      {results && (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
+          }}
+        >
+          {/* Job title section */}
+          <div
+            style={{
+              padding: "10px 12px",
+              borderRadius: "8px",
+              background: "#020617",
+              border: "1px solid #1f2937",
+            }}
+          >
+            <h3 style={{ marginTop: 0, fontSize: "1rem" }}>
+              Job title / headline
+            </h3>
+            {results.jobTitleInfo.hasAnyTitle ? (
+              <>
+                <p
+                  style={{
+                    fontSize: "0.9rem",
+                    color: "#9ca3af",
+                    marginBottom: 6,
+                  }}
+                >
+                  Detected headline-like lines near the top:
+                </p>
+                <ul
+                  style={{
+                    margin: 0,
+                    paddingLeft: "1.2rem",
+                    fontSize: "0.85rem",
+                    color: "#e5e7eb",
+                  }}
+                >
+                  {results.jobTitleInfo.detectedTitles.map((t, i) => (
+                    <li key={i}>{t}</li>
+                  ))}
+                </ul>
+                {!results.jobTitleInfo.hasStrongTitle && (
+                  <p
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "#facc15",
+                      marginTop: 6,
+                    }}
+                  >
+                    Consider using a clearer target title like &quot;Software
+                    Engineer&quot; or &quot;Backend Engineer&quot; instead of
+                    something vague or student-focused.
+                  </p>
+                )}
+                {results.jobTitleInfo.weakTitles.length > 0 && (
+                  <p
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "#f97316",
+                      marginTop: 4,
+                    }}
+                  >
+                    These lines look a bit weak as a headline (e.g. contain
+                    &quot;student&quot; / &quot;aspiring&quot;):
+                    <br />
+                    {results.jobTitleInfo.weakTitles.join(" | ")}
+                  </p>
+                )}
+              </>
+            ) : (
+              <p style={{ fontSize: "0.9rem", color: "#9ca3af", margin: 0 }}>
+                I couldn&apos;t clearly detect a headline / job title near the
+                top. Many resumes start with a short line like
+                &nbsp;&quot;Software Engineer&quot; or &quot;Backend Engineer&quot;
+                above the experience section.
+              </p>
+            )}
+          </div>
+
+          {/* Links section */}
+          <div
+            style={{
+              padding: "10px 12px",
+              borderRadius: "8px",
+              background: "#020617",
+              border: "1px solid #1f2937",
+            }}
+          >
+            <h3 style={{ marginTop: 0, fontSize: "1rem" }}>Links</h3>
+            <p style={{ fontSize: "0.9rem", color: "#9ca3af", margin: 0 }}>
+              GitHub link:{" "}
+              {results.hasGithub ? "✅ Found" : "⚠️ Not detected"}
+              <br />
+              Portfolio / personal site:{" "}
+              {results.hasPortfolio ? "✅ Found" : "⚠️ Not clearly detected"}
+              <br />
+              Total links: {results.allLinks.length}
+            </p>
+          </div>
+
+          {/* Metrics section */}
+          <div
+            style={{
+              padding: "10px 12px",
+              borderRadius: "8px",
+              background: "#020617",
+              border: "1px solid #1f2937",
+            }}
+          >
+            <h3 style={{ marginTop: 0, fontSize: "1rem" }}>
+              Metrics in bullets
+            </h3>
+            <p
+              style={{
+                fontSize: "0.9rem",
+                color: "#9ca3af",
+                marginBottom: 8,
+              }}
+            >
+              Bullets with numbers/metrics:{" "}
+              {results.bulletsWithMetricsCount} / {results.bulletCount}
+            </p>
+            {results.bulletsWithMetricsCount === 0 && (
+              <p style={{ fontSize: "0.85rem", color: "#facc15", margin: 0 }}>
+                Try adding numbers like &quot;increased X by 20%&quot;,
+                &quot;reduced latency by 50ms&quot;, etc.
+              </p>
+            )}
+          </div>
+
+          {/* Action verb section */}
+          <div
+            style={{
+              padding: "10px 12px",
+              borderRadius: "8px",
+              background: "#020617",
+              border: "1px solid #1f2937",
+            }}
+          >
+            <h3 style={{ marginTop: 0, fontSize: "1rem" }}>
+              Bullet action verbs
+            </h3>
+            {results.bulletsNeedingStrongerVerb.length === 0 ? (
+              <p style={{ fontSize: "0.9rem", color: "#9ca3af", margin: 0 }}>
+                ✅ All detected bullets start with a strong verb (based on the
+                current list).
+              </p>
+            ) : (
+              <>
+                <p
+                  style={{
+                    fontSize: "0.9rem",
+                    color: "#facc15",
+                    marginBottom: 6,
+                  }}
+                >
+                  These bullets might benefit from a stronger starting verb:
+                </p>
+                <ul
+                  style={{
+                    margin: 0,
+                    paddingLeft: "1.2rem",
+                    fontSize: "0.85rem",
+                    color: "#e5e7eb",
+                  }}
+                >
+                  {results.bulletsNeedingStrongerVerb.map((line, idx) => (
+                    <li key={idx}>{line}</li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+
+          {/* Keyword coverage section (if job description given) */}
+          {results.keywordCoverage && (
+            <div
+              style={{
+                padding: "10px 12px",
+                borderRadius: "8px",
+                background: "#020617",
+                border: "1px solid #1f2937",
+              }}
+            >
+              <h3 style={{ marginTop: 0, fontSize: "1rem" }}>
+                Job description keywords (AI)
+              </h3>
+              <p
+                style={{
+                  fontSize: "0.9rem",
+                  color: "#9ca3af",
+                  marginBottom: 6,
+                }}
+              >
+                Coverage: {results.keywordCoverage.percent}% (
+                {results.keywordCoverage.matched.length} /{" "}
+                {results.keywordCoverage.total} keywords)
+              </p>
+              {results.keywordCoverage.missing.length > 0 && (
+                <>
+                  <p
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "#facc15",
+                      marginBottom: 4,
+                    }}
+                  >
+                    Some keywords not found in your resume (you might weave
+                    these in if they truly apply to you):
+                  </p>
+                  <div
+                    style={{
+                      fontSize: "0.8rem",
+                      color: "#e5e7eb",
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "6px",
+                    }}
+                  >
+                    {results.keywordCoverage.missing
+                      .slice(0, 20)
+                      .map((kw, idx) => (
+                        <span
+                          key={idx}
+                          style={{
+                            padding: "2px 6px",
+                            borderRadius: "999px",
+                            border: "1px solid #4b5563",
+                          }}
+                        >
+                          {kw}
+                        </span>
+                      ))}
+                    {results.keywordCoverage.missing.length > 20 && (
+                      <span style={{ color: "#9ca3af" }}>…</span>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
+}
+
+/** Front-end helper: call backend AI endpoint */
+async function extractKeywordsFromJobDescription(jobText) {
+  try {
+    const res = await fetch("http://localhost:3001/api/extract-keywords", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jobText }),
+    });
+
+    if (!res.ok) {
+      console.error("Keyword API error status:", res.status);
+      throw new Error("Keyword API error");
+    }
+
+    const data = await res.json();
+
+    if (Array.isArray(data.keywords)) {
+      return data.keywords;
+    }
+
+    console.warn("Keyword API returned unexpected shape:", data);
+    return [];
+  } catch (err) {
+    console.error("Failed to call keyword API:", err);
+    // Fallback: no keywords if AI fails
+    return [];
+  }
 }
