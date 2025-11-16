@@ -183,7 +183,7 @@ export default function App() {
           onClick={() => setActiveTab(TABS.SCHEDULE)}
         />
         <TabButton
-          label="Apply"
+          label="Networking"
           active={activeTab === TABS.APPLY}
           onClick={() => setActiveTab(TABS.APPLY)}
         />
@@ -191,11 +191,6 @@ export default function App() {
           label="LeetCode"
           active={activeTab === TABS.LEETCODE}
           onClick={() => setActiveTab(TABS.LEETCODE)}
-        />
-        <TabButton
-          label="LinkedIn"
-          active={activeTab === TABS.LINKEDIN}
-          onClick={() => setActiveTab(TABS.LINKEDIN)}
         />
         <TabButton
           label="Resume"
@@ -214,7 +209,6 @@ export default function App() {
         )}
         {activeTab === TABS.APPLY && <ApplyTab />}
         {activeTab === TABS.LEETCODE && <LeetCodeTab />}
-        {activeTab === TABS.LINKEDIN && <LinkedInTab />}
         {activeTab === TABS.RESUME && <ResumeTab />}
       </div>
     </div>
@@ -1395,24 +1389,6 @@ function LeetCodeTab() {
     </div>
   );
 }
-/** ---------- LINKEDIN TAB ---------- **/
-
-function LinkedInTab() {
-  return (
-    <div>
-      <h2>LinkedIn Networking</h2>
-      <p style={{ fontSize: "0.9rem", color: "#9ca3af", marginBottom: "8px" }}>
-        This tab is for anything around outreach: tracking who you messaged,
-        templates for cold messages, and follow-up reminders.
-      </p>
-      <p style={{ fontSize: "0.9rem", color: "#9ca3af" }}>
-        It ties to your &quot;Send 2 networking messages on LinkedIn&quot;
-        daily task.
-      </p>
-    </div>
-  );
-}
-
 /** ---------- RESUME TAB (AI keywords + job title sanity) ---------- **/
 
 function ResumeTab() {
