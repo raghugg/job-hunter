@@ -1,6 +1,6 @@
 # job-hunter
 Authors:
-Raghavendra Guggilam
+Raghavendra Guggilam,
 Gaurav Sehgal
 
 AI Development Usage:
