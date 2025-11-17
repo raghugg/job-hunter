@@ -590,7 +590,6 @@ function ScheduleTab({ tasks, setState }) {
 }
 
 /** ---------- APPLY TAB ---------- **/
-
 function ApplyTab() {
   const [jobs, setJobs] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -599,7 +598,6 @@ function ApplyTab() {
   const [newJob, setNewJob] = useState({
     title: '',
     company: '',
-    location: '',
     postUrl: '',
     description: '',
     status: 'saved',
@@ -668,7 +666,6 @@ function ApplyTab() {
     setNewJob({
       title: '',
       company: '',
-      location: '',
       postUrl: '',
       description: '',
       status: 'saved',
@@ -831,25 +828,6 @@ function ApplyTab() {
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '0.85rem', color: '#9ca3af', marginBottom: '4px' }}>
-                Location
-              </label>
-              <input
-                type="text"
-                value={newJob.location}
-                onChange={(e) => setNewJob({ ...newJob, location: e.target.value })}
-                placeholder="e.g. Remote, New York, NY"
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  borderRadius: '4px',
-                  border: '1px solid #4b5563',
-                  background: '#0f172a',
-                  color: '#e5e7eb',
-                }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: '#9ca3af', marginBottom: '4px' }}>
                 Job Post URL
               </label>
               <input
@@ -939,11 +917,6 @@ function ApplyTab() {
                   <div style={{ fontSize: '0.9rem', color: '#9ca3af', marginBottom: '2px' }}>
                     {job.company}
                   </div>
-                  {job.location && (
-                    <div style={{ fontSize: '0.85rem', color: '#9ca3af', marginBottom: '2px' }}>
-                      {job.location}
-                    </div>
-                  )}
                   {job.postUrl && (
                     <div style={{ fontSize: '0.85rem', marginTop: '4px' }}>
                       <a
@@ -970,7 +943,7 @@ function ApplyTab() {
                       cursor: 'pointer',
                     }}
                   >
-                    {expandedJobs[job.id] ? 'Collapse' : 'Expand'}
+                    {expandedJobs[job.id] ? 'Hide Description' : 'Show Description'}
                   </button>
                   <button
                     onClick={() => startEdit(job)}
@@ -1032,7 +1005,145 @@ function ApplyTab() {
                 </div>
               </div>
 
-              {/* Expandable Section */}
+              {/* Networking Contacts */}
+              <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #1f2937' }}>
+                <h4 style={{ margin: '0 0 12px 0', fontSize: '0.9rem', color: '#e5e7eb' }}>
+                  Networking Contacts
+                </h4>
+                
+                {/* Contact List */}
+                {job.contacts && job.contacts.length > 0 ? (
+                  <div style={{ marginBottom: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {job.contacts.map((contact) => (
+                      <div
+                        key={contact.id}
+                        style={{
+                          padding: '10px',
+                          background: '#0f172a',
+                          borderRadius: '4px',
+                          border: '1px solid #1f2937',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <div style={{ flex: 1, minWidth: '150px' }}>
+                          <div style={{ fontSize: '0.9rem', color: '#e5e7eb', marginBottom: '2px' }}>
+                            {contact.name}
+                          </div>
+                          {contact.linkedin && (
+                            <a
+                              href={ensureHttps(contact.linkedin)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ fontSize: '0.8rem', color: '#22c55e', textDecoration: 'none' }}
+                            >
+                              LinkedIn Profile
+                            </a>
+                          )}
+                        </div>
+                        <select
+                          value={contact.status}
+                          onChange={(e) => updateContactStatus(job.id, contact.id, e.target.value)}
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            border: '1px solid #4b5563',
+                            background: '#020617',
+                            color: '#e5e7eb',
+                            fontSize: '0.85rem',
+                          }}
+                        >
+                          <option value="none">No action</option>
+                          <option value="connected">Connected</option>
+                          <option value="messaged">Messaged</option>
+                          <option value="responded">They responded</option>
+                        </select>
+                        <button
+                          onClick={() => removeContact(job.id, contact.id)}
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            border: '1px solid #dc2626',
+                            background: '#7f1d1d22',
+                            color: '#fca5a5',
+                            fontSize: '0.75rem',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '0.85rem', color: '#6b7280', fontStyle: 'italic', marginBottom: '12px' }}>
+                    No contacts added yet
+                  </div>
+                )}
+
+                {/* Add Contact Form */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                  <div style={{ flex: '1 1 150px' }}>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: '#9ca3af', marginBottom: '4px' }}>
+                      Name
+                    </label>
+                    <input
+                      type="text"
+                      value={newContact.name}
+                      onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
+                      placeholder="Contact name"
+                      style={{
+                        width: '100%',
+                        padding: '6px',
+                        borderRadius: '4px',
+                        border: '1px solid #4b5563',
+                        background: '#0f172a',
+                        color: '#e5e7eb',
+                        fontSize: '0.85rem',
+                      }}
+                    />
+                  </div>
+                  <div style={{ flex: '1 1 200px' }}>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: '#9ca3af', marginBottom: '4px' }}>
+                      LinkedIn URL
+                    </label>
+                    <input
+                      type="text"
+                      value={newContact.linkedin}
+                      onChange={(e) => setNewContact({ ...newContact, linkedin: e.target.value })}
+                      placeholder="linkedin.com/in/..."
+                      style={{
+                        width: '100%',
+                        padding: '6px',
+                        borderRadius: '4px',
+                        border: '1px solid #4b5563',
+                        background: '#0f172a',
+                        color: '#e5e7eb',
+                        fontSize: '0.85rem',
+                      }}
+                    />
+                  </div>
+                  <button
+                    onClick={() => addContactToJob(job.id)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '4px',
+                      border: '1px solid #22c55e',
+                      background: '#22c55e22',
+                      color: '#22c55e',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    Add Contact
+                  </button>
+                </div>
+              </div>
+
+              {/* Expandable Job Description */}
               {expandedJobs[job.id] && (
                 <div
                   style={{
@@ -1043,159 +1154,18 @@ function ApplyTab() {
                     border: '1px solid #1f2937',
                   }}
                 >
-                  {/* Job Description */}
-                  <div style={{ marginBottom: '20px' }}>
-                    <h4 style={{ margin: '0 0 8px 0', fontSize: '0.9rem', color: '#e5e7eb' }}>
-                      Job Description
-                    </h4>
-                    {job.description ? (
-                      <div style={{ fontSize: '0.85rem', color: '#9ca3af', whiteSpace: 'pre-wrap' }}>
-                        {job.description}
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: '0.85rem', color: '#6b7280', fontStyle: 'italic' }}>
-                        No description added
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Networking Contacts */}
-                  <div>
-                    <h4 style={{ margin: '0 0 12px 0', fontSize: '0.9rem', color: '#e5e7eb' }}>
-                      Networking Contacts
-                    </h4>
-                    
-                    {/* Contact List */}
-                    {job.contacts && job.contacts.length > 0 ? (
-                      <div style={{ marginBottom: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {job.contacts.map((contact) => (
-                          <div
-                            key={contact.id}
-                            style={{
-                              padding: '10px',
-                              background: '#020617',
-                              borderRadius: '4px',
-                              border: '1px solid #1f2937',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '12px',
-                              flexWrap: 'wrap',
-                            }}
-                          >
-                            <div style={{ flex: 1, minWidth: '150px' }}>
-                              <div style={{ fontSize: '0.9rem', color: '#e5e7eb', marginBottom: '2px' }}>
-                                {contact.name}
-                              </div>
-                              {contact.linkedin && (
-                                <a
-                                  href={ensureHttps(contact.linkedin)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{ fontSize: '0.8rem', color: '#22c55e', textDecoration: 'none' }}
-                                >
-                                  LinkedIn Profile
-                                </a>
-                              )}
-                            </div>
-                            <select
-                              value={contact.status}
-                              onChange={(e) => updateContactStatus(job.id, contact.id, e.target.value)}
-                              style={{
-                                padding: '4px 8px',
-                                borderRadius: '4px',
-                                border: '1px solid #4b5563',
-                                background: '#0f172a',
-                                color: '#e5e7eb',
-                                fontSize: '0.85rem',
-                              }}
-                            >
-                              <option value="none">No action</option>
-                              <option value="connected">Connected</option>
-                              <option value="messaged">Messaged</option>
-                              <option value="responded">They responded</option>
-                            </select>
-                            <button
-                              onClick={() => removeContact(job.id, contact.id)}
-                              style={{
-                                padding: '4px 8px',
-                                borderRadius: '4px',
-                                border: '1px solid #dc2626',
-                                background: '#7f1d1d22',
-                                color: '#fca5a5',
-                                fontSize: '0.75rem',
-                                cursor: 'pointer',
-                              }}
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: '0.85rem', color: '#6b7280', fontStyle: 'italic', marginBottom: '12px' }}>
-                        No contacts added yet
-                      </div>
-                    )}
-
-                    {/* Add Contact Form */}
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                      <div style={{ flex: '1 1 150px' }}>
-                        <label style={{ display: 'block', fontSize: '0.75rem', color: '#9ca3af', marginBottom: '4px' }}>
-                          Name
-                        </label>
-                        <input
-                          type="text"
-                          value={newContact.name}
-                          onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
-                          placeholder="Contact name"
-                          style={{
-                            width: '100%',
-                            padding: '6px',
-                            borderRadius: '4px',
-                            border: '1px solid #4b5563',
-                            background: '#020617',
-                            color: '#e5e7eb',
-                            fontSize: '0.85rem',
-                          }}
-                        />
-                      </div>
-                      <div style={{ flex: '1 1 200px' }}>
-                        <label style={{ display: 'block', fontSize: '0.75rem', color: '#9ca3af', marginBottom: '4px' }}>
-                          LinkedIn URL
-                        </label>
-                        <input
-                          type="text"
-                          value={newContact.linkedin}
-                          onChange={(e) => setNewContact({ ...newContact, linkedin: e.target.value })}
-                          placeholder="linkedin.com/in/..."
-                          style={{
-                            width: '100%',
-                            padding: '6px',
-                            borderRadius: '4px',
-                            border: '1px solid #4b5563',
-                            background: '#020617',
-                            color: '#e5e7eb',
-                            fontSize: '0.85rem',
-                          }}
-                        />
-                      </div>
-                      <button
-                        onClick={() => addContactToJob(job.id)}
-                        style={{
-                          padding: '6px 12px',
-                          borderRadius: '4px',
-                          border: '1px solid #22c55e',
-                          background: '#22c55e22',
-                          color: '#22c55e',
-                          fontSize: '0.85rem',
-                          cursor: 'pointer',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        Add Contact
-                      </button>
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '0.9rem', color: '#e5e7eb' }}>
+                    Job Description
+                  </h4>
+                  {job.description ? (
+                    <div style={{ fontSize: '0.85rem', color: '#9ca3af', whiteSpace: 'pre-wrap' }}>
+                      {job.description}
                     </div>
-                  </div>
+                  ) : (
+                    <div style={{ fontSize: '0.85rem', color: '#6b7280', fontStyle: 'italic' }}>
+                      No description added
+                    </div>
+                  )}
                 </div>
               )}
             </div>
