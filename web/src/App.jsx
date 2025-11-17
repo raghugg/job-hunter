@@ -417,16 +417,16 @@ function TodayTab({ state, setState }) {
           }}
         >
           {last7Days.map((day) => {
-            let statusLabel = "⬜ 0% done";
+            let statusLabel = "0% done";
             let statusColor = "#9ca3af";
             let bg = "#111827";
 
             if (day.percent === 100) {
-              statusLabel = "✅ 100% done";
+              statusLabel = "100% done";
               statusColor = "#4ade80";
               bg = "#16a34a22";
             } else if (day.percent > 0) {
-              statusLabel = `🟡 ${day.percent}% done`;
+              statusLabel = `${day.percent}% done`;
               statusColor = "#facc15";
               bg = "#43380f";
             }
@@ -576,10 +576,7 @@ function ScheduleTab({ tasks, setState }) {
               >
                 <option value="daily">Daily</option>
                 <option value="weekly">Weekly</option>
-                {/* Custom disabled for now */}
-                <option value="custom" disabled>
-                  Custom (coming soon)
-                </option>
+                <option value="custom">Custom</option>
               </select>
             </div>
           </div>
@@ -1290,7 +1287,7 @@ function LeetCodeTab() {
       <h2>LeetCode / Interview Practice</h2>
       <p style={{ fontSize: "0.9rem", color: "#9ca3af", marginBottom: "16px" }}>
         {allProblems.length > 0 
-          ? `Get 3 random LeetCode problems to practice. Database includes ${allProblems.length} problems!`
+          ? `Get 3 random LeetCode problems to practice.`
           : "Loading problems..."}
       </p>
 
@@ -1308,7 +1305,7 @@ function LeetCodeTab() {
           marginBottom: "20px",
         }}
       >
-        {loading ? "⏳ Loading problems..." : "🎲 Get 3 Random Problems"}
+        {loading ? "Loading problems..." : "Get 3 Random Problems"}
       </button>
 
       {error && (
@@ -1323,7 +1320,7 @@ function LeetCodeTab() {
             fontSize: "0.9rem",
           }}
         >
-          ⚠️ {error}
+          ! {error}
         </div>
       )}
 
@@ -1866,12 +1863,12 @@ function ResumeTab() {
             <h3 style={{ marginTop: 0, fontSize: "1rem" }}>Links</h3>
             <p style={{ fontSize: "0.9rem", color: "#9ca3af", margin: 0 }}>
               GitHub link:{" "}
-              {results.hasGithub ? "✅ Found" : "⚠️ Not detected"}
+              {results.hasGithub ? "Found" : "Not detected"}
               <br />
               Portfolio / personal site:{" "}
               {results.hasPortfolio
-                ? "✅ Found"
-                : "⚠️ Not clearly detected"}
+                ? "Found"
+                : "Not clearly detected"}
               <br />
               Total links: {results.allLinks.length}
             </p>
@@ -1925,7 +1922,7 @@ function ResumeTab() {
               <p
                 style={{ fontSize: "0.9rem", color: "#9ca3af", margin: 0 }}
               >
-                ✅ All detected bullets start with a strong verb (based on the
+                All detected bullets start with a strong verb (based on the
                 current list).
               </p>
             ) : (
