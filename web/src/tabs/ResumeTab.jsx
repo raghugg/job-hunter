@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { suggestJobTitleImprovementsBrowser, extractKeywordsFromJobDescriptionBrowser } from "../utils/api";
 
-export default function ResumeTab() {
+export default function ResumeTab({ onBack }) {
   const [resumeText, setResumeText] = useState("");
   const [jobText, setJobText] = useState("");
   const [results, setResults] = useState(null);
@@ -140,6 +140,22 @@ export default function ResumeTab() {
 
   return (
     <div>
+      <button
+        onClick={onBack}
+        style={{
+          padding: '8px 16px',
+          borderRadius: '6px',
+          border: '1px solid #4b5563',
+          background: '#1f2937',
+          color: '#e5e7eb',
+          fontSize: '0.9rem',
+          cursor: 'pointer',
+          marginBottom: '20px',
+        }}
+      >
+        ← Back to Checklist
+      </button>
+
       <h2>Resume Checker</h2>
       <div style={{ marginBottom: "16px", padding: "10px 12px", borderRadius: "8px", background: "#020617", border: "1px solid #1f2937" }}>
         <label style={{ fontSize: "0.85rem", color: "#9ca3af", display: "block", marginBottom: "4px" }}>Gemini API key</label>

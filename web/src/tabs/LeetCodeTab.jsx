@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export default function LeetCodeTab() {
+export default function LeetCodeTab({ onBack }) {
   const [randomProblems, setRandomProblems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -55,8 +55,41 @@ export default function LeetCodeTab() {
       setError('No problems loaded yet');
       return;
     }
-    const shuffled = [...allProblems].sort(() => Math.random() - 0.5);
-    setRandomProblems(shuffled.slice(0, 3));
+
+    // Separate problems by difficulty
+    const easyProblems = allProblems.filter(p => p.difficulty === 'Easy');
+    const mediumProblems = allProblems.filter(p => p.difficulty === 'Medium');
+    const hardProblems = allProblems.filter(p => p.difficulty === 'Hard');
+
+    const selected = [];
+
+    // Get one easy problem
+    if (easyProblems.length > 0) {
+      const randomEasy = easyProblems[Math.floor(Math.random() * easyProblems.length)];
+      selected.push(randomEasy);
+    }
+
+    // Get one medium problem
+    if (mediumProblems.length > 0) {
+      const randomMedium = mediumProblems[Math.floor(Math.random() * mediumProblems.length)];
+      selected.push(randomMedium);
+    }
+
+    // Get one hard problem
+    if (hardProblems.length > 0) {
+      const randomHard = hardProblems[Math.floor(Math.random() * hardProblems.length)];
+      selected.push(randomHard);
+    }
+
+    // If we don't have enough, fill with random problems
+    while (selected.length < 3 && selected.length < allProblems.length) {
+      const randomProblem = allProblems[Math.floor(Math.random() * allProblems.length)];
+      if (!selected.find(p => p.id === randomProblem.id)) {
+        selected.push(randomProblem);
+      }
+    }
+
+    setRandomProblems(selected);
   };
 
   const difficultyColor = (difficulty) => {
@@ -70,9 +103,25 @@ export default function LeetCodeTab() {
 
   return (
     <div>
+      <button
+        onClick={onBack}
+        style={{
+          padding: '8px 16px',
+          borderRadius: '6px',
+          border: '1px solid #4b5563',
+          background: '#1f2937',
+          color: '#e5e7eb',
+          fontSize: '0.9rem',
+          cursor: 'pointer',
+          marginBottom: '20px',
+        }}
+      >
+        ← Back to Checklist
+      </button>
+
       <h2>LeetCode / Interview Practice</h2>
       <p style={{ fontSize: "0.9rem", color: "#9ca3af", marginBottom: "16px" }}>
-        {allProblems.length > 0 ? `Get 3 random LeetCode problems to practice.` : "Loading problems..."}
+        {allProblems.length > 0 ? `Get 3 random LeetCode problems (1 Easy, 1 Medium, 1 Hard).` : "Loading problems..."}
       </p>
 
       <button

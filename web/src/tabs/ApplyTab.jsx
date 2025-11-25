@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ensureHttps } from "../utils/helpers";
 
-export default function ApplyTab() {
+export default function ApplyTab({ onBack }) {
   const [jobs, setJobs] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
@@ -152,9 +152,24 @@ export default function ApplyTab() {
 
   return (
     <div>
-      {/* UI Rendering (kept exactly as original but moved here) */}
+      <button
+        onClick={onBack}
+        style={{
+          padding: '8px 16px',
+          borderRadius: '6px',
+          border: '1px solid #4b5563',
+          background: '#1f2937',
+          color: '#e5e7eb',
+          fontSize: '0.9rem',
+          cursor: 'pointer',
+          marginBottom: '20px',
+        }}
+      >
+        ← Back to Checklist
+      </button>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2 style={{ margin: 0 }}>Job Applications</h2>
+        <h2 style={{ margin: 0 }}>Applications & Networking</h2>
         <button
           onClick={() => {
             if (showAddForm) { resetForm(); } else { setShowAddForm(true); }

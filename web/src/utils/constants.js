@@ -1,9 +1,7 @@
-export const TABS = {
-  TODAY: "today",
-  SCHEDULE: "schedule",
+export const VIEWS = {
+  CHECKLIST: "checklist",
   APPLY: "apply",
   LEETCODE: "leetcode",
-  LINKEDIN: "linkedin",
   RESUME: "resume",
 };
 
@@ -16,6 +14,8 @@ export const defaultTodayTasks = [
     target: 3,
     completedCount: 0,
     frequency: "daily",
+    linkedView: "apply",
+    isDefault: true,
   },
   {
     id: 2,
@@ -23,6 +23,8 @@ export const defaultTodayTasks = [
     target: 1,
     completedCount: 0,
     frequency: "daily",
+    linkedView: "leetcode",
+    isDefault: true,
   },
   {
     id: 3,
@@ -30,6 +32,8 @@ export const defaultTodayTasks = [
     target: 2,
     completedCount: 0,
     frequency: "daily",
+    linkedView: "apply",
+    isDefault: true,
   },
   {
     id: 4,
@@ -37,5 +41,7 @@ export const defaultTodayTasks = [
     target: 1,
     completedCount: 0,
     frequency: "weekly",
+    linkedView: "resume",
+    isDefault: true,
   },
 ];
