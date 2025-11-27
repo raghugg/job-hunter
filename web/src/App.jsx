@@ -19,6 +19,13 @@ export default function App() {
     }
   });
   const [currentView, setCurrentView] = useState(settings.defaultView);
+  const [hasNavigated, setHasNavigated] = useState(false);
+
+  // Wrapper for setCurrentView that tracks navigation
+  const navigateToView = (view) => {
+    setHasNavigated(true);
+    setCurrentView(view);
+  };
 
   // ---------- SHARED STATE FOR TASKS + HISTORY ----------
   const [state, setState] = useState(() => {
@@ -302,17 +309,20 @@ export default function App() {
           <TodayTab
             state={state}
             setState={setState}
-            onNavigate={(view) => setCurrentView(view)}
+            onNavigate={(view) => navigateToView(view)}
           />
         )}
         {currentView === VIEWS.APPLY && (
-          <ApplyTab onBack={() => setCurrentView(VIEWS.CHECKLIST)} />
+          <ApplyTab onBack={() => navigateToView(VIEWS.CHECKLIST)} />
         )}
         {currentView === VIEWS.LEETCODE && (
-          <LeetCodeTab onBack={() => setCurrentView(VIEWS.CHECKLIST)} />
+          <LeetCodeTab onBack={() => navigateToView(VIEWS.CHECKLIST)} />
         )}
         {currentView === VIEWS.RESUME && (
-          <ResumeTab onBack={() => setCurrentView(VIEWS.CHECKLIST)} />
+          <ResumeTab
+            onBack={() => navigateToView(VIEWS.CHECKLIST)}
+            hasNavigated={hasNavigated}
+          />
         )}
       </div>
     </div>

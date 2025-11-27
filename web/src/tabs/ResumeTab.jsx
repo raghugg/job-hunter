@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { suggestJobTitleImprovementsBrowser, extractKeywordsFromJobDescriptionBrowser } from "../utils/api";
 
-export default function ResumeTab({ onBack }) {
+export default function ResumeTab({ onBack, hasNavigated }) {
   const [resumeText, setResumeText] = useState("");
   const [jobText, setJobText] = useState("");
   const [results, setResults] = useState(null);
@@ -153,7 +153,7 @@ export default function ResumeTab({ onBack }) {
           marginBottom: '20px',
         }}
       >
-        ← Back to Checklist
+        {hasNavigated ? '← Back to Checklist' : 'View Checklist'}
       </button>
 
       <h2>Resume Checker</h2>

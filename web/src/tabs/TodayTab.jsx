@@ -407,63 +407,36 @@ export default function TodayTab({ state, setState, onNavigate }) {
         )}
         <div style={{ flex: 1 }}>
           <div style={{ color: "#e5e7eb" }}>
-            {getTaskDisplayLabel(task)}
-            {!editMode && task.externalUrl && (
+            {!editMode && task.externalUrl ? (
               <a
                 href={task.externalUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
                 style={{
-                  marginLeft: "8px",
-                  padding: "2px 8px",
-                  borderRadius: "4px",
-                  border: "1px solid #4b5563",
-                  background: "#1f2937",
-                  color: "#9ca3af",
-                  fontSize: "0.75rem",
-                  textDecoration: "none",
-                  display: "inline-block",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#374151";
-                  e.currentTarget.style.color = "#e5e7eb";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "#1f2937";
-                  e.currentTarget.style.color = "#9ca3af";
+                  color: "#e5e7eb",
+                  textDecoration: "underline",
+                  cursor: "pointer",
                 }}
               >
-                Open ↗
+                {getTaskDisplayLabel(task)}
               </a>
-            )}
-            {!editMode && !task.externalUrl && task.linkedView && (
-              <button
+            ) : !editMode && task.linkedView ? (
+              <span
                 onClick={(e) => {
                   e.stopPropagation();
                   onNavigate(task.linkedView);
                 }}
                 style={{
-                  marginLeft: "8px",
-                  padding: "2px 8px",
-                  borderRadius: "4px",
-                  border: "1px solid #4b5563",
-                  background: "#1f2937",
-                  color: "#9ca3af",
-                  fontSize: "0.75rem",
+                  color: "#e5e7eb",
+                  textDecoration: "underline",
                   cursor: "pointer",
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#374151";
-                  e.currentTarget.style.color = "#e5e7eb";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "#1f2937";
-                  e.currentTarget.style.color = "#9ca3af";
-                }}
               >
-                Open →
-              </button>
+                {getTaskDisplayLabel(task)}
+              </span>
+            ) : (
+              getTaskDisplayLabel(task)
             )}
           </div>
           <div style={{ fontSize: "0.8rem", color: "#9ca3af", marginTop: "2px" }}>
@@ -562,7 +535,9 @@ export default function TodayTab({ state, setState, onNavigate }) {
           border: "1px solid #1f2937", marginBottom: "16px",
         }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-          <h2 style={{ marginTop: 0, marginBottom: 0, fontSize: "1.1rem" }}>Checklist</h2>
+          <h2 style={{ marginTop: 0, marginBottom: 0, fontSize: "1.1rem" }}>
+            Checklist <span style={{ fontWeight: "400", fontSize: "0.75rem", color: "#9ca3af" }}>(click underlined items to open)</span>
+          </h2>
           <button
             onClick={() => {
               setEditMode(!editMode);
