@@ -5,8 +5,8 @@ yarn-debug.log*
 yarn-error.log*
 
 # Vite / build artifacts
-dist/
-web/dist/
+# dist/
+# web/dist/
 
 # Env / secrets
 .env
