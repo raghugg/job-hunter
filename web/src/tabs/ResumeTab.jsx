@@ -16,14 +16,6 @@ export default function ResumeTab({ onBack, hasNavigated }) {
     "owned", "collaborated", "automated",
   ];
 
-  const handleSaveKey = () => {
-    alert("🔒 Security Info:\n\nFor your security, API keys are no longer saved between sessions.\n\nYour key is:\n• Only stored in memory while the page is open\n• Sent securely through our proxy server\n• Never visible in browser DevTools\n• Automatically cleared when you close the tab");
-  };
-
-  const handleDeleteKey = () => {
-    setUserGeminiKey("");
-    setErrorMsg("");
-  };
 
   const analyze = async () => {
     const text = resumeText || "";
@@ -149,8 +141,9 @@ export default function ResumeTab({ onBack, hasNavigated }) {
       <div style={{ marginBottom: "16px", padding: "10px 12px", borderRadius: "8px", background: "#020617", border: "1px solid #1f2937" }}>
         <label style={{ fontSize: "0.85rem", color: "#9ca3af", display: "block", marginBottom: "4px" }}>Gemini API key</label>
         <input type="password" value={userGeminiKey} onChange={(e) => setUserGeminiKey(e.target.value)} style={{ width: "100%", borderRadius: "6px", border: "1px solid #4b5563", background: "#020617", color: "#e5e7eb", padding: "6px 8px", fontSize: "0.85rem", marginBottom: "6px" }} />
-        <button onClick={handleSaveKey} style={{ padding: "6px 10px", borderRadius: "999px", border: "1px solid #3b82f6", background: "#3b82f622", color: "#e5e7eb", fontSize: "0.85rem", cursor: "pointer" }}>🔒 Security Info</button>
-        <button onClick={handleDeleteKey} style={{ padding: "6px 10px", borderRadius: "999px", border: "1px solid #ef4444", background: "#ef444433", color: "#e5e7eb", fontSize: "0.85rem", cursor: "pointer", marginLeft: "8px" }}>Clear Key</button>
+        <p style={{ fontSize: "0.75rem", color: "#9ca3af", margin: 0 }}>
+          Get a free API key at <a href="https://ai.google.dev" target="_blank" rel="noopener noreferrer" style={{ color: "#3b82f6", textDecoration: "none" }}>ai.google.dev</a> - Your key stays private and is never saved
+        </p>
       </div>
 
       <div style={{ marginBottom: "16px", padding: "10px 12px", borderRadius: "8px", background: "#020617", border: "1px solid #1f2937" }}>
