@@ -108,48 +108,59 @@ export default function ResumeTab({ onBack, hasNavigated }) {
         }
       }
 
-      // --- LaTeX Resume Generation (only in LaTeX mode) ---
-      let improvedLatex = null;
-      let latexError = null;
-
-      if (isLatexMode && userGeminiKey?.trim()) {
-        setLatexGenerating(true);
-        try {
-          const latexResult = await generateImprovedLatexResumeBrowser(
-            text,
-            {
-              jobTitleSuggestions,
-              bulletsNeedingStrongerVerb,
-              keywordCoverage,
-            },
-            userGeminiKey
-          );
-
-          if (latexResult.error) {
-            latexError = latexResult.error;
-          } else {
-            improvedLatex = latexResult.latex;
-          }
-        } catch (latexErr) {
-          console.error("LaTeX generation failed:", latexErr);
-          latexError = "LaTeX generation failed. See console for details.";
-        } finally {
-          setLatexGenerating(false);
-        }
-      }
-
       setResults({
         jobTitleSuggestions, jobTitleAIMessage, allLinks, hasGithub, hasPortfolio,
         bulletCount: bulletLines.length, bulletsWithMetricsCount: bulletsWithMetrics.length,
         bulletsWithMetrics, bulletsNeedingStrongerVerb, keywordCoverage, aiMessage,
-        improvedLatex,
-        latexError,
       });
     } catch (err) {
       console.error(err);
       setErrorMsg(err?.message || "Something went wrong running the checks.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateLatex = async () => {
+    if (!results || !userGeminiKey?.trim()) {
+      setErrorMsg("Please provide an API key and run checks first.");
+      return;
+    }
+
+    setLatexGenerating(true);
+    try {
+      const latexResult = await generateImprovedLatexResumeBrowser(
+        resumeText,
+        {
+          jobTitleSuggestions: results.jobTitleSuggestions,
+          bulletsNeedingStrongerVerb: results.bulletsNeedingStrongerVerb,
+          keywordCoverage: results.keywordCoverage,
+        },
+        userGeminiKey
+      );
+
+      if (latexResult.error) {
+        setResults({
+          ...results,
+          latexError: latexResult.error,
+          improvedLatex: null,
+        });
+      } else {
+        setResults({
+          ...results,
+          improvedLatex: latexResult.latex,
+          latexError: null,
+        });
+      }
+    } catch (latexErr) {
+      console.error("LaTeX generation failed:", latexErr);
+      setResults({
+        ...results,
+        latexError: "LaTeX generation failed. See console for details.",
+        improvedLatex: null,
+      });
+    } finally {
+      setLatexGenerating(false);
     }
   };
 
@@ -261,6 +272,42 @@ export default function ResumeTab({ onBack, hasNavigated }) {
                <p>Missing: {results.keywordCoverage.missing.slice(0, 10).join(", ")}</p>
              </div>
            )}
+
+          {/* Generate LaTeX Button - only show in LaTeX mode if LaTeX not yet generated */}
+          {isLatexMode && !results.improvedLatex && !results.latexError && (
+            <div style={{
+              padding: "10px 12px",
+              borderRadius: "8px",
+              background: "#020617",
+              border: "1px solid #3b82f6",
+              textAlign: "center"
+            }}>
+              <p style={{ fontSize: "0.85rem", color: "#9ca3af", marginTop: 0, marginBottom: "8px" }}>
+                Ready to generate an improved LaTeX resume based on the feedback above?
+              </p>
+              <button
+                onClick={generateLatex}
+                disabled={latexGenerating || !userGeminiKey?.trim()}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  border: "1px solid #3b82f6",
+                  background: latexGenerating || !userGeminiKey?.trim() ? "#111827" : "#3b82f622",
+                  color: latexGenerating || !userGeminiKey?.trim() ? "#6b7280" : "#3b82f6",
+                  fontSize: "0.9rem",
+                  cursor: latexGenerating || !userGeminiKey?.trim() ? "not-allowed" : "pointer",
+                  fontWeight: "500"
+                }}
+              >
+                {latexGenerating ? "Generating LaTeX..." : "Generate Improved LaTeX Resume"}
+              </button>
+              {!userGeminiKey?.trim() && (
+                <p style={{ fontSize: "0.75rem", color: "#f97316", marginTop: "8px", marginBottom: 0 }}>
+                  API key required above
+                </p>
+              )}
+            </div>
+          )}
 
           {/* LaTeX Output - only in LaTeX mode */}
           {isLatexMode && results.improvedLatex && (
