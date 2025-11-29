@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { suggestJobTitleImprovementsBrowser, extractKeywordsFromJobDescriptionBrowser } from "../utils/api";
+import { suggestJobTitleImprovementsBrowser, extractKeywordsFromJobDescriptionBrowser, generateImprovedLatexResumeBrowser } from "../utils/api";
 
 export default function ResumeTab({ onBack, hasNavigated }) {
   const [resumeText, setResumeText] = useState("");
@@ -9,6 +9,8 @@ export default function ResumeTab({ onBack, hasNavigated }) {
   const [errorMsg, setErrorMsg] = useState("");
 
   const [userGeminiKey, setUserGeminiKey] = useState("");
+  const [isLatexMode, setIsLatexMode] = useState(false);
+  const [latexGenerating, setLatexGenerating] = useState(false);
 
   const actionVerbs = [
     "led", "built", "created", "implemented", "designed", "developed", "improved",
@@ -106,10 +108,42 @@ export default function ResumeTab({ onBack, hasNavigated }) {
         }
       }
 
+      // --- LaTeX Resume Generation (only in LaTeX mode) ---
+      let improvedLatex = null;
+      let latexError = null;
+
+      if (isLatexMode && userGeminiKey?.trim()) {
+        setLatexGenerating(true);
+        try {
+          const latexResult = await generateImprovedLatexResumeBrowser(
+            text,
+            {
+              jobTitleSuggestions,
+              bulletsNeedingStrongerVerb,
+              keywordCoverage,
+            },
+            userGeminiKey
+          );
+
+          if (latexResult.error) {
+            latexError = latexResult.error;
+          } else {
+            improvedLatex = latexResult.latex;
+          }
+        } catch (latexErr) {
+          console.error("LaTeX generation failed:", latexErr);
+          latexError = "LaTeX generation failed. See console for details.";
+        } finally {
+          setLatexGenerating(false);
+        }
+      }
+
       setResults({
         jobTitleSuggestions, jobTitleAIMessage, allLinks, hasGithub, hasPortfolio,
         bulletCount: bulletLines.length, bulletsWithMetricsCount: bulletsWithMetrics.length,
         bulletsWithMetrics, bulletsNeedingStrongerVerb, keywordCoverage, aiMessage,
+        improvedLatex,
+        latexError,
       });
     } catch (err) {
       console.error(err);
@@ -147,8 +181,41 @@ export default function ResumeTab({ onBack, hasNavigated }) {
       </div>
 
       <div style={{ marginBottom: "16px", padding: "10px 12px", borderRadius: "8px", background: "#020617", border: "1px solid #1f2937" }}>
-        <label style={{ fontSize: "0.85rem", color: "#9ca3af", display: "block", marginBottom: "4px" }}>Resume text</label>
-        <textarea value={resumeText} onChange={(e) => setResumeText(e.target.value)} rows={10} placeholder="Paste resume (LaTeX recommended for best results)..." style={{ width: "100%", borderRadius: "6px", border: "1px solid #4b5563", background: "#020617", color: "#e5e7eb", padding: "8px", fontFamily: "monospace", fontSize: "0.85rem", resize: "none" }} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+          <label style={{ fontSize: "0.85rem", color: "#9ca3af" }}>Resume text</label>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <span style={{ fontSize: "0.75rem", color: "#9ca3af" }}>Mode:</span>
+            <button
+              onClick={() => setIsLatexMode(false)}
+              style={{
+                padding: "4px 10px",
+                borderRadius: "4px",
+                border: "1px solid " + (isLatexMode ? "#4b5563" : "#3b82f6"),
+                background: isLatexMode ? "#020617" : "#3b82f622",
+                color: isLatexMode ? "#9ca3af" : "#3b82f6",
+                fontSize: "0.75rem",
+                cursor: "pointer"
+              }}
+            >
+              Regular
+            </button>
+            <button
+              onClick={() => setIsLatexMode(true)}
+              style={{
+                padding: "4px 10px",
+                borderRadius: "4px",
+                border: "1px solid " + (isLatexMode ? "#3b82f6" : "#4b5563"),
+                background: isLatexMode ? "#3b82f622" : "#020617",
+                color: isLatexMode ? "#3b82f6" : "#9ca3af",
+                fontSize: "0.75rem",
+                cursor: "pointer"
+              }}
+            >
+              LaTeX
+            </button>
+          </div>
+        </div>
+        <textarea value={resumeText} onChange={(e) => setResumeText(e.target.value)} rows={10} placeholder={isLatexMode ? "Paste LaTeX resume code..." : "Paste resume text..."} style={{ width: "100%", borderRadius: "6px", border: "1px solid #4b5563", background: "#020617", color: "#e5e7eb", padding: "8px", fontFamily: "monospace", fontSize: "0.85rem", resize: "none" }} />
       </div>
 
       <div style={{ marginBottom: "16px", padding: "10px 12px", borderRadius: "8px", background: "#020617", border: "1px solid #1f2937" }}>
@@ -159,7 +226,7 @@ export default function ResumeTab({ onBack, hasNavigated }) {
       {errorMsg && <p style={{ fontSize: "0.85rem", color: "#f97316", marginTop: 0, marginBottom: "8px" }}>{errorMsg}</p>}
 
       <button onClick={analyze} disabled={!resumeText.trim() || loading} style={{ padding: "8px 14px", borderRadius: "999px", border: "1px solid #22c55e", background: !resumeText.trim() || loading ? "#111827" : "#22c55e22", color: "#e5e7eb", fontSize: "0.9rem", cursor: !resumeText.trim() || loading ? "not-allowed" : "pointer", marginBottom: "16px" }}>
-        {loading ? "Running checks..." : "Run checks"}
+        {loading ? (latexGenerating ? "Generating LaTeX..." : "Running checks...") : "Run checks"}
       </button>
 
       {results && (
@@ -194,6 +261,72 @@ export default function ResumeTab({ onBack, hasNavigated }) {
                <p>Missing: {results.keywordCoverage.missing.slice(0, 10).join(", ")}</p>
              </div>
            )}
+
+          {/* LaTeX Output - only in LaTeX mode */}
+          {isLatexMode && results.improvedLatex && (
+            <div style={{
+              padding: "10px 12px",
+              borderRadius: "8px",
+              background: "#020617",
+              border: "1px solid #22c55e"
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <h3 style={{ margin: 0 }}>Improved LaTeX Resume</h3>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(results.improvedLatex);
+                    alert("LaTeX code copied to clipboard!");
+                  }}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "6px",
+                    border: "1px solid #22c55e",
+                    background: "#22c55e22",
+                    color: "#22c55e",
+                    fontSize: "0.85rem",
+                    cursor: "pointer"
+                  }}
+                >
+                  Copy LaTeX
+                </button>
+              </div>
+              <p style={{ fontSize: "0.85rem", color: "#9ca3af", marginTop: 0, marginBottom: "8px" }}>
+                Based on your resume analysis. Compile this with pdflatex or XeLaTeX.
+              </p>
+              <textarea
+                value={results.improvedLatex}
+                readOnly
+                rows={20}
+                style={{
+                  width: "100%",
+                  borderRadius: "6px",
+                  border: "1px solid #4b5563",
+                  background: "#0a0a0a",
+                  color: "#22c55e",
+                  padding: "12px",
+                  fontFamily: "monospace",
+                  fontSize: "0.75rem",
+                  resize: "vertical",
+                  whiteSpace: "pre"
+                }}
+              />
+            </div>
+          )}
+
+          {/* LaTeX Error Display */}
+          {isLatexMode && results.latexError && (
+            <div style={{
+              padding: "10px 12px",
+              borderRadius: "8px",
+              background: "#020617",
+              border: "1px solid #dc2626"
+            }}>
+              <h3 style={{ color: "#fca5a5", margin: "0 0 8px 0" }}>LaTeX Generation Error</h3>
+              <p style={{ fontSize: "0.85rem", color: "#fca5a5", margin: 0 }}>
+                {results.latexError}
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

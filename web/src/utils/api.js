@@ -159,3 +159,106 @@ export async function suggestJobTitleImprovementsBrowser(resumeText, apiKey) {
     }))
     .filter((t) => t.original && t.suggested);
 }
+
+/** Helper function to build explicit change instructions from analysis results */
+function buildExplicitChangeInstructions(analysisResults) {
+  const instructions = [];
+
+  // 1. Job title changes - EXACT replacements
+  if (analysisResults.jobTitleSuggestions?.length > 0) {
+    instructions.push("JOB TITLE REPLACEMENTS (apply these exact changes):");
+    analysisResults.jobTitleSuggestions.forEach(({original, suggested}) => {
+      instructions.push(`  - Replace "${original}" with "${suggested}"`);
+    });
+  }
+
+  // 2. Weak action verbs - list the specific bullets
+  if (analysisResults.bulletsNeedingStrongerVerb?.length > 0) {
+    instructions.push("\nBULLETS NEEDING STRONGER ACTION VERBS:");
+    instructions.push("  The following bullets start with weak verbs. Replace ONLY the first word with a stronger action verb from this list:");
+    instructions.push("  [led, built, created, implemented, designed, developed, improved, optimized, managed, organized, increased, reduced, launched, owned, collaborated, automated]");
+    analysisResults.bulletsNeedingStrongerVerb.slice(0, 10).forEach(bullet => {
+      instructions.push(`  - "${bullet}"`);
+    });
+  }
+
+  // 3. Missing keywords - WHERE to add them (if applicable)
+  if (analysisResults.keywordCoverage?.missing?.length > 0) {
+    const keywords = analysisResults.keywordCoverage.missing.slice(0, 10).join(', ');
+    instructions.push("\nMISSING KEYWORDS TO INCORPORATE:");
+    instructions.push(`  These keywords are missing: ${keywords}`);
+    instructions.push("  ONLY add these keywords to existing bullets or sections where they are FACTUALLY ACCURATE and relevant.");
+    instructions.push("  DO NOT create new bullets or sections just to include keywords.");
+    instructions.push("  If a keyword doesn't fit anywhere truthfully, SKIP IT.");
+  }
+
+  return instructions.join('\n');
+}
+
+/** Browser-only Gemini call to generate improved LaTeX resume */
+export async function generateImprovedLatexResumeBrowser(resumeText, analysisResults, apiKey) {
+  if (!apiKey?.trim()) {
+    console.warn("No Gemini API key set; skipping LaTeX generation.");
+    return { error: "No API key provided" };
+  }
+
+  const modelName = "gemini-2.5-flash-lite";
+  const changeInstructions = buildExplicitChangeInstructions(analysisResults);
+
+  const promptText = `
+You are a LaTeX resume formatter. You will receive a LaTeX resume and a list of SPECIFIC changes to make.
+
+CRITICAL RULES - VIOLATION WILL RESULT IN REJECTION:
+1. ONLY make the changes explicitly listed below
+2. NEVER invent metrics, numbers, dates, or accomplishments
+3. NEVER add information not in the original resume
+4. NEVER make improvements not specifically requested
+5. If unsure about a change, DON'T make it
+6. Preserve ALL original formatting, structure, and factual content
+
+ORIGINAL LATEX RESUME:
+---
+${resumeText}
+---
+
+CHANGES TO APPLY:
+${changeInstructions}
+
+${changeInstructions.length === 0 ? 'NO CHANGES REQUESTED - Return the original resume with only minor LaTeX formatting improvements (line breaks, spacing).' : ''}
+
+INSTRUCTIONS:
+1. Make ONLY the changes listed above
+2. Preserve all LaTeX structure and formatting
+3. Keep all dates, companies, schools, and technologies EXACTLY as written
+4. Return complete, compilable LaTeX code
+
+Return ONLY the complete LaTeX code, starting with \\documentclass.
+DO NOT add explanations or comments.
+`;
+
+  const prompt = {
+    contents: [{ parts: [{ text: promptText }] }],
+  };
+
+  try {
+    const data = await callWorker(apiKey.trim(), modelName, prompt);
+
+    const text =
+      data.candidates?.[0]?.content?.parts
+        ?.map((p) => p.text || "")
+        .join("\n") || "";
+
+    // Clean markdown fences if present
+    let cleanedLatex = text.replace(/```latex\n?/g, "").replace(/```\n?/g, "").trim();
+
+    // Validate LaTeX structure
+    if (!cleanedLatex.includes("\\documentclass") && !cleanedLatex.includes("\\begin")) {
+      return { error: "Invalid LaTeX output - missing document structure" };
+    }
+
+    return { latex: cleanedLatex };
+  } catch (err) {
+    console.error("LaTeX generation error:", err);
+    return { error: err?.message || "LaTeX generation failed" };
+  }
+}
