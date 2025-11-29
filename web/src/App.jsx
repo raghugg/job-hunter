@@ -132,7 +132,7 @@ export default function App() {
     <div className="app">
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
-        <h1 style={{ margin: 0 }}>Job Hunter</h1>
+        <h1 style={{ margin: 0 }}>Job Hunters</h1>
         <button
           onClick={() => setShowSettings(true)}
           style={{
