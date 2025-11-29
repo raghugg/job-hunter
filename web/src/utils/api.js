@@ -98,27 +98,30 @@ export async function suggestJobTitleImprovementsBrowser(resumeText, apiKey) {
   const modelName = "gemini-2.5-flash-lite";
 
   const promptText = `
-  Extract job titles from the resume text below.
+  Extract ONLY job titles from the Work Experience or Employment sections of the resume below.
 
-  Identify any titles that:
+  IMPORTANT: Ignore project names, school projects, personal projects, and portfolio items.
+  Only look at actual job positions held at companies or organizations.
+
+  Identify any job titles that:
   - are overly internal (e.g., "DOE-SULI Intern", "Research Aide II")
   - are unclear to a typical tech recruiter
   - do not use standard industry phrasing
 
-  For each unclear title, suggest a clearer, more standard job title.
+  For each unclear job title, suggest a clearer, more standard title.
 
   Return ONLY valid JSON in this exact format:
 
   {
     "titles": [
       {
-        "original": "Original title exactly as written",
-        "suggested": "Clearer, more standard title"
+        "original": "Original job title exactly as written",
+        "suggested": "Clearer, more standard job title"
       }
     ]
   }
 
-  If all titles are fine, return:
+  If all job titles are clear and standard, return:
 
   { "titles": [] }
 
