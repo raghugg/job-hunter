@@ -142,7 +142,7 @@ export default function ResumeTab({ onBack, hasNavigated }) {
         <label style={{ fontSize: "0.85rem", color: "#9ca3af", display: "block", marginBottom: "4px" }}>Gemini API key</label>
         <input type="password" value={userGeminiKey} onChange={(e) => setUserGeminiKey(e.target.value)} style={{ width: "100%", borderRadius: "6px", border: "1px solid #4b5563", background: "#020617", color: "#e5e7eb", padding: "6px 8px", fontSize: "0.85rem", marginBottom: "6px" }} />
         <p style={{ fontSize: "0.75rem", color: "#9ca3af", margin: 0 }}>
-          Get a free API key at <a href="https://ai.google.dev" target="_blank" rel="noopener noreferrer" style={{ color: "#3b82f6", textDecoration: "none" }}>ai.google.dev</a> - Your key stays private and is never saved
+          Get a free API key at <a href="https://aistudio.google.com/app/api-keys" target="_blank" rel="noopener noreferrer" style={{ color: "#3b82f6", textDecoration: "none" }}>aistudio.google.com</a> - Your key stays private and is never saved
         </p>
       </div>
 
