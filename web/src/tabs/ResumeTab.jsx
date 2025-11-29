@@ -148,12 +148,12 @@ export default function ResumeTab({ onBack, hasNavigated }) {
 
       <div style={{ marginBottom: "16px", padding: "10px 12px", borderRadius: "8px", background: "#020617", border: "1px solid #1f2937" }}>
         <label style={{ fontSize: "0.85rem", color: "#9ca3af", display: "block", marginBottom: "4px" }}>Resume text</label>
-        <textarea value={resumeText} onChange={(e) => setResumeText(e.target.value)} rows={10} placeholder="Paste resume..." style={{ width: "100%", borderRadius: "6px", border: "1px solid #4b5563", background: "#020617", color: "#e5e7eb", padding: "8px", fontFamily: "monospace", fontSize: "0.85rem" }} />
+        <textarea value={resumeText} onChange={(e) => setResumeText(e.target.value)} rows={10} placeholder="Paste resume..." style={{ width: "100%", borderRadius: "6px", border: "1px solid #4b5563", background: "#020617", color: "#e5e7eb", padding: "8px", fontFamily: "monospace", fontSize: "0.85rem", resize: "none" }} />
       </div>
 
       <div style={{ marginBottom: "16px", padding: "10px 12px", borderRadius: "8px", background: "#020617", border: "1px solid #1f2937" }}>
         <label style={{ fontSize: "0.85rem", color: "#9ca3af", display: "block", marginBottom: "4px" }}>Job description (optional)</label>
-        <textarea value={jobText} onChange={(e) => setJobText(e.target.value)} rows={6} placeholder="Paste job description..." style={{ width: "100%", borderRadius: "6px", border: "1px solid #4b5563", background: "#020617", color: "#e5e7eb", padding: "8px", fontFamily: "monospace", fontSize: "0.85rem" }} />
+        <textarea value={jobText} onChange={(e) => setJobText(e.target.value)} rows={6} placeholder="Paste job description..." style={{ width: "100%", borderRadius: "6px", border: "1px solid #4b5563", background: "#020617", color: "#e5e7eb", padding: "8px", fontFamily: "monospace", fontSize: "0.85rem", resize: "none" }} />
       </div>
 
       {errorMsg && <p style={{ fontSize: "0.85rem", color: "#f97316", marginTop: 0, marginBottom: "8px" }}>{errorMsg}</p>}
