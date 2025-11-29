@@ -11,6 +11,7 @@ web/dist/
 # Env / secrets
 .env
 .env.*
+!.env.production
 !env.example
 
 # Editor / OS junk
