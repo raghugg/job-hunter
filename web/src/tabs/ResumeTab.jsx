@@ -8,10 +8,7 @@ export default function ResumeTab({ onBack, hasNavigated }) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const [userGeminiKey, setUserGeminiKey] = useState(() => {
-    if (typeof window === "undefined") return "";
-    return window.localStorage.getItem("jobhunter_gemini_key") || "";
-  });
+  const [userGeminiKey, setUserGeminiKey] = useState("");
 
   const actionVerbs = [
     "led", "built", "created", "implemented", "designed", "developed", "improved",
@@ -20,20 +17,12 @@ export default function ResumeTab({ onBack, hasNavigated }) {
   ];
 
   const handleSaveKey = () => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("jobhunter_gemini_key", userGeminiKey.trim());
-    }
-    setErrorMsg("");
-    alert("Saved API key locally in this browser.");
+    alert("🔒 Security Info:\n\nFor your security, API keys are no longer saved between sessions.\n\nYour key is:\n• Only stored in memory while the page is open\n• Sent securely through our proxy server\n• Never visible in browser DevTools\n• Automatically cleared when you close the tab");
   };
 
   const handleDeleteKey = () => {
-    if (typeof window !== "undefined") {
-      window.localStorage.removeItem("jobhunter_gemini_key");
-    }
     setUserGeminiKey("");
     setErrorMsg("");
-    alert("API key deleted from this browser.");
   };
 
   const analyze = async () => {
@@ -160,8 +149,8 @@ export default function ResumeTab({ onBack, hasNavigated }) {
       <div style={{ marginBottom: "16px", padding: "10px 12px", borderRadius: "8px", background: "#020617", border: "1px solid #1f2937" }}>
         <label style={{ fontSize: "0.85rem", color: "#9ca3af", display: "block", marginBottom: "4px" }}>Gemini API key</label>
         <input type="password" value={userGeminiKey} onChange={(e) => setUserGeminiKey(e.target.value)} style={{ width: "100%", borderRadius: "6px", border: "1px solid #4b5563", background: "#020617", color: "#e5e7eb", padding: "6px 8px", fontSize: "0.85rem", marginBottom: "6px" }} />
-        <button onClick={handleSaveKey} style={{ padding: "6px 10px", borderRadius: "999px", border: "1px solid #22c55e", background: "#22c55e22", color: "#e5e7eb", fontSize: "0.85rem", cursor: "pointer" }}>Save key locally</button>
-        <button onClick={handleDeleteKey} style={{ padding: "6px 10px", borderRadius: "999px", border: "1px solid #ef4444", background: "#ef444433", color: "#e5e7eb", fontSize: "0.85rem", cursor: "pointer", marginLeft: "8px" }}>Delete key</button>
+        <button onClick={handleSaveKey} style={{ padding: "6px 10px", borderRadius: "999px", border: "1px solid #3b82f6", background: "#3b82f622", color: "#e5e7eb", fontSize: "0.85rem", cursor: "pointer" }}>🔒 Security Info</button>
+        <button onClick={handleDeleteKey} style={{ padding: "6px 10px", borderRadius: "999px", border: "1px solid #ef4444", background: "#ef444433", color: "#e5e7eb", fontSize: "0.85rem", cursor: "pointer", marginLeft: "8px" }}>Clear Key</button>
       </div>
 
       <div style={{ marginBottom: "16px", padding: "10px 12px", borderRadius: "8px", background: "#020617", border: "1px solid #1f2937" }}>

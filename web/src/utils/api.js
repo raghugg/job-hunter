@@ -1,3 +1,27 @@
+/** Helper function to call Cloudflare Worker proxy */
+async function callWorker(apiKey, model, prompt) {
+  const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'http://localhost:8787';
+
+  const response = await fetch(WORKER_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      apiKey,
+      model,
+      prompt,
+    }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Worker API call failed: ${response.status} ${text}`);
+  }
+
+  return response.json();
+}
+
 /** Browser-only Gemini call for job description keywords */
 export async function extractKeywordsFromJobDescriptionBrowser(jobText, apiKey) {
   if (!apiKey || !apiKey.trim()) {
@@ -6,47 +30,34 @@ export async function extractKeywordsFromJobDescriptionBrowser(jobText, apiKey) 
   }
 
   const modelName = "gemini-2.5-flash-lite";
-  const url =
-    "https://generativelanguage.googleapis.com/v1beta/models/" +
-    modelName +
-    ":generateContent?key=" +
-    encodeURIComponent(apiKey.trim());
 
-  const prompt = `
+  const promptText = `
   Read the following software job description and extract 10 to 30 of the most
   important SKILLS or KEYWORDS.
-  
+
   Return ONLY valid JSON in this exact shape:
-  
+
   {
     "keywords": ["keyword1", "keyword2", "keyword3", ...]
   }
-  
+
   Rules:
   - Each keyword must be short (1–3 words).
   - DO NOT group multiple keywords into one string.
   - DO NOT add any explanation text, only JSON.
-  
+
   Job description:
   ---
   ${jobText}
   ---
   `;
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-    }),
-  });
+  const prompt = {
+    contents: [{ parts: [{ text: promptText }] }],
+  };
 
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error("Gemini API error: HTTP " + res.status);
-  }
+  const data = await callWorker(apiKey.trim(), modelName, prompt);
 
-  const data = await res.json();
   const text =
     data.candidates?.[0]?.content?.parts
       ?.map((p) => p.text || "")
@@ -85,24 +96,19 @@ export async function suggestJobTitleImprovementsBrowser(resumeText, apiKey) {
   }
 
   const modelName = "gemini-2.5-flash-lite";
-  const url =
-    "https://generativelanguage.googleapis.com/v1beta/models/" +
-    modelName +
-    ":generateContent?key=" +
-    encodeURIComponent(apiKey.trim());
 
-  const prompt = `
+  const promptText = `
   Extract job titles from the resume text below.
-  
+
   Identify any titles that:
   - are overly internal (e.g., "DOE-SULI Intern", "Research Aide II")
   - are unclear to a typical tech recruiter
   - do not use standard industry phrasing
-  
+
   For each unclear title, suggest a clearer, more standard job title.
-  
+
   Return ONLY valid JSON in this exact format:
-  
+
   {
     "titles": [
       {
@@ -111,31 +117,23 @@ export async function suggestJobTitleImprovementsBrowser(resumeText, apiKey) {
       }
     ]
   }
-  
+
   If all titles are fine, return:
-  
+
   { "titles": [] }
-  
+
   Resume:
   ---
   ${resumeText}
   ---
   `;
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-    }),
-  });
+  const prompt = {
+    contents: [{ parts: [{ text: promptText }] }],
+  };
 
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error("Gemini job title API error: HTTP " + res.status);
-  }
+  const data = await callWorker(apiKey.trim(), modelName, prompt);
 
-  const data = await res.json();
   const text =
     data.candidates?.[0]?.content?.parts
       ?.map((p) => p.text || "")
