@@ -119,7 +119,7 @@ export default function LeetCodeTab({ onBack }) {
         ← Back to Checklist
       </button>
 
-      <h2>LeetCode / Interview Practice</h2>
+      <h2 style={{ margin: 0 }}>LeetCode / Interview Practice</h2>
       <p style={{ fontSize: "0.9rem", color: "#9ca3af", marginBottom: "16px" }}>
         {allProblems.length > 0 ? `Get 3 random LeetCode problems (1 Easy, 1 Medium, 1 Hard).` : "Loading problems..."}
       </p>
