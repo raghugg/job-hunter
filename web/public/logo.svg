@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Background -->
+  <!-- <rect width="200" height="200" fill="#f5f5f5" rx="40"/> -->
+
+  <!-- Simple brown briefcase -->
+  <g transform="translate(100, 110)">
+    <!-- Handle -->
+    <rect x="-30" y="-85" width="60" height="15" rx="7" fill="#8b4513"/>
+
+    <!-- Body -->
+    <rect x="-85" y="-60" width="170" height="120" rx="14" fill="#8b4513"/>
+  </g>
+
+  <!-- Magnifying glass with lens -->
+  <g transform="translate(120, 120)">
+    <!-- Transparent lens (light blue with opacity to show briefcase through it) -->
+    <circle cx="0" cy="0" r="25" fill="#e0f2fe" opacity="0.4"/>
+    <!-- Glass border -->
+    <circle cx="0" cy="0" r="25" fill="none" stroke="#000000" stroke-width="9"/>
+    <!-- Handle -->
+    <line x1="17" y1="17" x2="42" y2="42" stroke="#000000" stroke-width="9" stroke-linecap="round"/>
+  </g>
+</svg>
