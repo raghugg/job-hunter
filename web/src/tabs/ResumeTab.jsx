@@ -182,7 +182,7 @@ export default function ResumeTab({ onBack, hasNavigated, onNavigate }) {
         {hasNavigated ? '← Back to Checklist' : 'View Checklist'}
       </button>
 
-      <h2 style={{ margin: 0 }}>Resume Checker</h2>
+      <h2 style={{ margin: "0 0 16px 0" }}>Resume Checker</h2>
       <div style={{ marginBottom: "16px", padding: "10px 12px", borderRadius: "8px", background: "#020617", border: "1px solid #1f2937" }}>
         <label style={{ fontSize: "0.85rem", color: "#9ca3af", display: "block", marginBottom: "4px" }}>Gemini API key</label>
         <input type="password" value={userGeminiKey} onChange={(e) => setUserGeminiKey(e.target.value)} style={{ width: "100%", borderRadius: "6px", border: "1px solid #4b5563", background: "#020617", color: "#e5e7eb", padding: "6px 8px", fontSize: "0.85rem", marginBottom: "6px" }} />
