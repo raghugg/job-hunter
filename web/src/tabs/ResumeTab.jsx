@@ -265,24 +265,28 @@ export default function ResumeTab({ onBack, hasNavigated }) {
              <p>Bullets with metrics: {results.bulletsWithMetricsCount} / {results.bulletCount}</p>
            </div>
 
-           {results.bulletsNeedingStrongerVerb && results.bulletsNeedingStrongerVerb.length > 0 && (
-             <div style={{ padding: "10px 12px", borderRadius: "8px", background: "#020617", border: "1px solid #1f2937" }}>
-               <h3>Bullets needing stronger action verbs</h3>
-               <p style={{ fontSize: "0.85rem", color: "#9ca3af", marginBottom: "8px" }}>
-                 These bullets should start with a stronger action verb:
-               </p>
-               <ul style={{ fontSize: "0.85rem", color: "#e5e7eb", marginTop: 0, paddingLeft: "20px" }}>
-                 {results.bulletsNeedingStrongerVerb.slice(0, 10).map((bullet, i) => (
-                   <li key={i} style={{ marginBottom: "4px" }}>{bullet}</li>
-                 ))}
-               </ul>
-               {results.bulletsNeedingStrongerVerb.length > 10 && (
-                 <p style={{ fontSize: "0.75rem", color: "#9ca3af", marginTop: "8px", marginBottom: 0 }}>
-                   ...and {results.bulletsNeedingStrongerVerb.length - 10} more
+           <div style={{ padding: "10px 12px", borderRadius: "8px", background: "#020617", border: "1px solid #1f2937" }}>
+             <h3>Action verbs</h3>
+             {results.bulletsNeedingStrongerVerb && results.bulletsNeedingStrongerVerb.length > 0 ? (
+               <>
+                 <p style={{ fontSize: "0.85rem", color: "#9ca3af", marginBottom: "8px" }}>
+                   These bullets should start with a stronger action verb:
                  </p>
-               )}
-             </div>
-           )}
+                 <ul style={{ fontSize: "0.85rem", color: "#e5e7eb", marginTop: 0, paddingLeft: "20px" }}>
+                   {results.bulletsNeedingStrongerVerb.slice(0, 10).map((bullet, i) => (
+                     <li key={i} style={{ marginBottom: "4px" }}>{bullet}</li>
+                   ))}
+                 </ul>
+                 {results.bulletsNeedingStrongerVerb.length > 10 && (
+                   <p style={{ fontSize: "0.75rem", color: "#9ca3af", marginTop: "8px", marginBottom: 0 }}>
+                     ...and {results.bulletsNeedingStrongerVerb.length - 10} more
+                   </p>
+                 )}
+               </>
+             ) : (
+               <p>No bullets with weak action verbs detected</p>
+             )}
+           </div>
 
            {results.keywordCoverage && (
              <div style={{ padding: "10px 12px", borderRadius: "8px", background: "#020617", border: "1px solid #1f2937" }}>
