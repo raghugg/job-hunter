@@ -517,6 +517,22 @@ export default function TodayTab({ state, setState, onNavigate }) {
 
   return (
     <div>
+      <button
+        onClick={() => onNavigate(VIEWS.RESUME)}
+        style={{
+          padding: '8px 16px',
+          borderRadius: '6px',
+          border: '1px solid #4b5563',
+          background: '#1f2937',
+          color: '#e5e7eb',
+          fontSize: '0.9rem',
+          cursor: 'pointer',
+          marginBottom: '20px',
+        }}
+      >
+        Resume Checker →
+      </button>
+
       <div style={{
           padding: "12px 16px", marginBottom: "16px", borderRadius: "8px",
           background: "#020617", border: "1px solid #1f2937",
