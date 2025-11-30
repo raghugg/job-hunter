@@ -297,7 +297,7 @@ export default function App() {
                   fontWeight: "500",
                 }}
               >
-                🗑️ Reset All Data
+                Reset All Data
               </button>
             </div>
           </div>
