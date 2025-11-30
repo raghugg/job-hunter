@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { suggestJobTitleImprovementsBrowser, extractKeywordsFromJobDescriptionBrowser, generateImprovedLatexResumeBrowser } from "../utils/api";
 
-export default function ResumeTab({ onBack, hasNavigated }) {
+export default function ResumeTab({ onBack, hasNavigated, onNavigate }) {
   const [resumeText, setResumeText] = useState("");
   const [jobText, setJobText] = useState("");
   const [results, setResults] = useState(null);
@@ -226,6 +226,26 @@ export default function ResumeTab({ onBack, hasNavigated }) {
             </button>
           </div>
         </div>
+        {isLatexMode && (
+          <p style={{ fontSize: "0.75rem", color: "#9ca3af", margin: "0 0 6px 0" }}>
+            Learn about{" "}
+            <button
+              onClick={() => onNavigate && onNavigate("latex-info")}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#3b82f6",
+                textDecoration: "none",
+                cursor: "pointer",
+                padding: 0,
+                fontSize: "0.75rem",
+              }}
+            >
+              LaTeX mode
+            </button>
+            {" "}- Get fully AI-generated resume updates based on feedback
+          </p>
+        )}
         <textarea value={resumeText} onChange={(e) => setResumeText(e.target.value)} rows={10} placeholder={isLatexMode ? "Paste LaTeX resume code..." : "Paste resume text..."} style={{ width: "100%", borderRadius: "6px", border: "1px solid #4b5563", background: "#020617", color: "#e5e7eb", padding: "8px", fontFamily: "monospace", fontSize: "0.85rem", resize: "none" }} />
       </div>
 

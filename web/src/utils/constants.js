@@ -3,6 +3,7 @@ export const VIEWS = {
   APPLY: "apply",
   LEETCODE: "leetcode",
   RESUME: "resume",
+  LATEX_INFO: "latex-info",
 };
 
 export const STORAGE_KEY = "jobhunter_state_v1";

@@ -3,6 +3,7 @@ import TodayTab from "./tabs/TodayTab";
 import ApplyTab from "./tabs/ApplyTab";
 import LeetCodeTab from "./tabs/LeetCodeTab";
 import ResumeTab from "./tabs/ResumeTab";
+import LaTeXInfoTab from "./tabs/LaTeXInfoTab";
 import { VIEWS, STORAGE_KEY, defaultTodayTasks } from "./utils/constants";
 import { getTodayKey, getWeekKey, createEmptyState } from "./utils/helpers";
 
@@ -322,7 +323,11 @@ export default function App() {
           <ResumeTab
             onBack={() => navigateToView(VIEWS.CHECKLIST)}
             hasNavigated={hasNavigated}
+            onNavigate={(view) => navigateToView(view)}
           />
+        )}
+        {currentView === VIEWS.LATEX_INFO && (
+          <LaTeXInfoTab onBack={() => navigateToView(VIEWS.RESUME)} />
         )}
       </div>
     </div>
