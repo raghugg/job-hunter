@@ -161,11 +161,11 @@ export async function suggestJobTitleImprovementsBrowser(resumeText, apiKey) {
 }
 
 /** Helper function to build explicit change instructions from analysis results */
-function buildExplicitChangeInstructions(analysisResults) {
+function buildExplicitChangeInstructions(analysisResults, enabledSuggestions = { jobTitles: true, actionVerbs: true, keywords: true }) {
   const instructions = [];
 
   // 1. Job title changes - EXACT replacements
-  if (analysisResults.jobTitleSuggestions?.length > 0) {
+  if (enabledSuggestions.jobTitles && analysisResults.jobTitleSuggestions?.length > 0) {
     instructions.push("JOB TITLE REPLACEMENTS (apply these exact changes):");
     analysisResults.jobTitleSuggestions.forEach(({original, suggested}) => {
       instructions.push(`  - Replace "${original}" with "${suggested}"`);
@@ -173,7 +173,7 @@ function buildExplicitChangeInstructions(analysisResults) {
   }
 
   // 2. Weak action verbs - list the specific bullets
-  if (analysisResults.bulletsNeedingStrongerVerb?.length > 0) {
+  if (enabledSuggestions.actionVerbs && analysisResults.bulletsNeedingStrongerVerb?.length > 0) {
     instructions.push("\nBULLETS NEEDING STRONGER ACTION VERBS:");
     instructions.push("  The following bullets start with weak verbs. Replace ONLY the first word with a stronger action verb from this list:");
     instructions.push("  [led, built, created, implemented, designed, developed, improved, optimized, managed, organized, increased, reduced, launched, owned, collaborated, automated]");
@@ -183,7 +183,7 @@ function buildExplicitChangeInstructions(analysisResults) {
   }
 
   // 3. Missing keywords - WHERE to add them (if applicable)
-  if (analysisResults.keywordCoverage?.missing?.length > 0) {
+  if (enabledSuggestions.keywords && analysisResults.keywordCoverage?.missing?.length > 0) {
     const keywords = analysisResults.keywordCoverage.missing.slice(0, 10).join(', ');
     instructions.push("\nMISSING KEYWORDS TO INCORPORATE:");
     instructions.push(`  These keywords are missing: ${keywords}`);
@@ -196,14 +196,14 @@ function buildExplicitChangeInstructions(analysisResults) {
 }
 
 /** Browser-only Gemini call to generate improved LaTeX resume */
-export async function generateImprovedLatexResumeBrowser(resumeText, analysisResults, apiKey) {
+export async function generateImprovedLatexResumeBrowser(resumeText, analysisResults, apiKey, enabledSuggestions) {
   if (!apiKey?.trim()) {
     console.warn("No Gemini API key set; skipping LaTeX generation.");
     return { error: "No API key provided" };
   }
 
   const modelName = "gemini-2.5-flash-lite";
-  const changeInstructions = buildExplicitChangeInstructions(analysisResults);
+  const changeInstructions = buildExplicitChangeInstructions(analysisResults, enabledSuggestions);
 
   const promptText = `
 You are a LaTeX resume formatter. You will receive a LaTeX resume and a list of SPECIFIC changes to make.

@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { suggestJobTitleImprovementsBrowser, extractKeywordsFromJobDescriptionBrowser, generateImprovedLatexResumeBrowser } from "../utils/api";
+
+const PREFERENCES_KEY = "resume_generation_preferences";
 
 export default function ResumeTab({ onBack, hasNavigated, onNavigate }) {
   const [resumeText, setResumeText] = useState("");
@@ -11,6 +13,28 @@ export default function ResumeTab({ onBack, hasNavigated, onNavigate }) {
   const [userGeminiKey, setUserGeminiKey] = useState("");
   const [isLatexMode, setIsLatexMode] = useState(false);
   const [latexGenerating, setLatexGenerating] = useState(false);
+  const [showSuggestionOptions, setShowSuggestionOptions] = useState(false);
+
+  // Suggestion toggles with localStorage persistence
+  const [enabledSuggestions, setEnabledSuggestions] = useState(() => {
+    try {
+      const saved = window.localStorage.getItem(PREFERENCES_KEY);
+      return saved ? JSON.parse(saved) : { jobTitles: true, actionVerbs: true, keywords: true };
+    } catch {
+      return { jobTitles: true, actionVerbs: true, keywords: true };
+    }
+  });
+
+  // Save preferences to localStorage whenever they change
+  useEffect(() => {
+    window.localStorage.setItem(PREFERENCES_KEY, JSON.stringify(enabledSuggestions));
+  }, [enabledSuggestions]);
+
+  const toggleSuggestion = (key) => {
+    setEnabledSuggestions(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const isUsingDefaults = enabledSuggestions.jobTitles && enabledSuggestions.actionVerbs && enabledSuggestions.keywords;
 
   const actionVerbs = [
     "led", "built", "created", "implemented", "designed", "developed", "improved",
@@ -136,7 +160,8 @@ export default function ResumeTab({ onBack, hasNavigated, onNavigate }) {
           bulletsNeedingStrongerVerb: results.bulletsNeedingStrongerVerb,
           keywordCoverage: results.keywordCoverage,
         },
-        userGeminiKey
+        userGeminiKey,
+        enabledSuggestions
       );
 
       if (latexResult.error) {
@@ -322,28 +347,100 @@ export default function ResumeTab({ onBack, hasNavigated, onNavigate }) {
               padding: "10px 12px",
               borderRadius: "8px",
               background: "#020617",
-              border: "1px solid #3b82f6",
-              textAlign: "center"
+              border: "1px solid #3b82f6"
             }}>
-              <p style={{ fontSize: "0.85rem", color: "#9ca3af", marginTop: 0, marginBottom: "8px" }}>
-                Ready to generate an improved LaTeX resume based on the feedback above?
-              </p>
-              <button
-                onClick={generateLatex}
-                disabled={latexGenerating || !userGeminiKey?.trim()}
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: "6px",
-                  border: "1px solid #3b82f6",
-                  background: latexGenerating || !userGeminiKey?.trim() ? "#111827" : "#3b82f622",
-                  color: latexGenerating || !userGeminiKey?.trim() ? "#6b7280" : "#3b82f6",
-                  fontSize: "0.9rem",
-                  cursor: latexGenerating || !userGeminiKey?.trim() ? "not-allowed" : "pointer",
-                  fontWeight: "500"
-                }}
-              >
-                {latexGenerating ? "Generating LaTeX..." : "Generate Improved LaTeX Resume"}
-              </button>
+              <div style={{ textAlign: "center" }}>
+                <p style={{ fontSize: "0.85rem", color: "#9ca3af", marginTop: 0, marginBottom: "8px" }}>
+                  Ready to generate an improved LaTeX resume?{" "}
+                  <button
+                    onClick={() => setShowSuggestionOptions(!showSuggestionOptions)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: isUsingDefaults ? "#22c55e" : "#f59e0b",
+                      textDecoration: "underline",
+                      cursor: "pointer",
+                      padding: 0,
+                      fontSize: "0.85rem",
+                      fontWeight: "500"
+                    }}
+                  >
+                    {showSuggestionOptions ? "Hide settings" : `Settings ${isUsingDefaults ? "[Default]" : "[Custom]"}`}
+                  </button>
+                </p>
+              </div>
+              <div style={{
+                maxHeight: showSuggestionOptions ? "500px" : "0",
+                overflow: "hidden",
+                transition: "max-height 0.3s ease-in-out",
+                marginBottom: showSuggestionOptions ? "12px" : "0",
+                paddingLeft: "20px"
+              }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: !isUsingDefaults ? "8px" : "0" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem", color: "#e5e7eb", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={enabledSuggestions.jobTitles}
+                      onChange={() => toggleSuggestion('jobTitles')}
+                      style={{ cursor: "pointer" }}
+                    />
+                    Apply job title improvements
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem", color: "#e5e7eb", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={enabledSuggestions.actionVerbs}
+                      onChange={() => toggleSuggestion('actionVerbs')}
+                      style={{ cursor: "pointer" }}
+                    />
+                    Apply action verb improvements
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem", color: "#e5e7eb", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={enabledSuggestions.keywords}
+                      onChange={() => toggleSuggestion('keywords')}
+                      style={{ cursor: "pointer" }}
+                    />
+                    Apply missing keywords
+                  </label>
+                </div>
+                {!isUsingDefaults && (
+                  <button
+                    onClick={() => setEnabledSuggestions({ jobTitles: true, actionVerbs: true, keywords: true })}
+                    style={{
+                      padding: "4px 8px",
+                      borderRadius: "4px",
+                      border: "1px solid #4b5563",
+                      background: "#1f2937",
+                      color: "#9ca3af",
+                      fontSize: "0.75rem",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Reset to defaults
+                  </button>
+                )}
+              </div>
+
+              <div style={{ textAlign: "center" }}>
+                <button
+                  onClick={generateLatex}
+                  disabled={latexGenerating || !userGeminiKey?.trim()}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    border: "1px solid #3b82f6",
+                    background: latexGenerating || !userGeminiKey?.trim() ? "#111827" : "#3b82f622",
+                    color: latexGenerating || !userGeminiKey?.trim() ? "#6b7280" : "#3b82f6",
+                    fontSize: "0.9rem",
+                    cursor: latexGenerating || !userGeminiKey?.trim() ? "not-allowed" : "pointer",
+                    fontWeight: "500"
+                  }}
+                >
+                  {latexGenerating ? "Generating LaTeX..." : "Generate Improved LaTeX Resume"}
+                </button>
+              </div>
               {!userGeminiKey?.trim() && (
                 <p style={{ fontSize: "0.75rem", color: "#f97316", marginTop: "8px", marginBottom: 0 }}>
                   API key required above
