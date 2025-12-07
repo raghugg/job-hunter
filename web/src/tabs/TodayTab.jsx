@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { getTodayKey, computeStreak } from "../utils/helpers";
-import { VIEWS } from "../utils/constants";
+import { VIEWS, defaultTodayTasks } from "../utils/constants";
 
 export default function TodayTab({ state, setState, onNavigate }) {
   const { tasks, history } = state;
   const [editMode, setEditMode] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
   const [newTask, setNewTask] = useState({
     label: "",
     target: 1,
@@ -216,6 +217,39 @@ export default function TodayTab({ state, setState, onNavigate }) {
       externalUrl: "",
     });
     setShowAddForm(false);
+  };
+
+  const handleAddMissingDefaults = () => {
+    const existingIds = new Set(tasks.map(t => t.id));
+    const missingDefaults = defaultTodayTasks
+      .filter(defaultTask => !existingIds.has(defaultTask.id))
+      .map(task => ({ ...task, completedCount: 0 }));
+
+    setState((prev) => ({
+      ...prev,
+      tasks: [...prev.tasks, ...missingDefaults],
+    }));
+    setShowRestoreModal(false);
+  };
+
+  const handleReplaceAll = () => {
+    setShowRestoreModal(false);
+
+    const confirmed = window.confirm(
+      "⚠️ WARNING: This will DELETE all custom tasks.\n\nContinue?"
+    );
+
+    if (confirmed) {
+      const resetDefaults = defaultTodayTasks.map(task => ({
+        ...task,
+        completedCount: 0
+      }));
+
+      setState((prev) => ({
+        ...prev,
+        tasks: resetDefaults,
+      }));
+    }
   };
 
   const completedTasks = tasks.filter(
@@ -690,7 +724,120 @@ export default function TodayTab({ state, setState, onNavigate }) {
             {weeklyTasks.map((task) => renderTask(task, tasks.indexOf(task)))}
           </div>
         )}
+
+        {editMode && (
+          <button
+            onClick={() => setShowRestoreModal(true)}
+            style={{
+              width: "100%",
+              padding: "8px 12px",
+              marginTop: "12px",
+              borderRadius: "6px",
+              border: "1px solid #4b5563",
+              background: "#1f2937",
+              color: "#9ca3af",
+              fontSize: "0.85rem",
+              cursor: "pointer",
+            }}
+          >
+            Restore Default Tasks
+          </button>
+        )}
       </div>
+
+      {/* Restore Defaults Modal */}
+      {showRestoreModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={() => setShowRestoreModal(false)}
+        >
+          <div
+            style={{
+              background: "#020617",
+              border: "1px solid #1f2937",
+              borderRadius: "12px",
+              padding: "24px",
+              maxWidth: "500px",
+              width: "90%",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 style={{ margin: "0 0 16px 0", fontSize: "1.3rem" }}>Restore Default Tasks</h2>
+            <p style={{ fontSize: "0.9rem", color: "#9ca3af", marginBottom: "24px" }}>
+              Choose how you want to restore the default tasks:
+            </p>
+
+            <button
+              onClick={handleAddMissingDefaults}
+              style={{
+                width: "100%",
+                padding: "12px",
+                marginBottom: "12px",
+                borderRadius: "6px",
+                border: "1px solid #22c55e",
+                background: "#22c55e22",
+                color: "#e5e7eb",
+                fontSize: "0.9rem",
+                cursor: "pointer",
+                fontWeight: "500",
+              }}
+            >
+              Add Missing Defaults
+              <div style={{ fontSize: "0.8rem", color: "#9ca3af", marginTop: "4px", fontWeight: "normal" }}>
+                Keep your custom tasks and add back any missing default tasks
+              </div>
+            </button>
+
+            <button
+              onClick={handleReplaceAll}
+              style={{
+                width: "100%",
+                padding: "12px",
+                marginBottom: "12px",
+                borderRadius: "6px",
+                border: "1px solid #dc2626",
+                background: "#7f1d1d22",
+                color: "#fca5a5",
+                fontSize: "0.9rem",
+                cursor: "pointer",
+                fontWeight: "500",
+              }}
+            >
+              Replace All Tasks
+              <div style={{ fontSize: "0.8rem", color: "#9ca3af", marginTop: "4px", fontWeight: "normal" }}>
+                Delete all current tasks and restore only the 4 defaults
+              </div>
+            </button>
+
+            <button
+              onClick={() => setShowRestoreModal(false)}
+              style={{
+                width: "100%",
+                padding: "10px",
+                borderRadius: "6px",
+                border: "1px solid #4b5563",
+                background: "#1f2937",
+                color: "#9ca3af",
+                fontSize: "0.85rem",
+                cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       <div style={{
           padding: "12px 16px", borderRadius: "8px", background: "#020617",
